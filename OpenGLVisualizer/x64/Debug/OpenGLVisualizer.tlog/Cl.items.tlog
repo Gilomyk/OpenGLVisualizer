@@ -1,3 +1,7 @@
-C:\Users\User\source\repos\OpenGLVisualizer\include\Shader.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Shader.obj
+C:\Users\User\source\repos\OpenGLVisualizer\src\Shader.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Shader.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\glad.c;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\glad.obj
-C:\Users\User\source\repos\OpenGLVisualizer\src\main.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\main.obj
+C:\Users\User\source\repos\OpenGLVisualizer\src\IndexBuffer.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\IndexBuffer.obj
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Application.obj
+C:\Users\User\source\repos\OpenGLVisualizer\src\Renderer.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Renderer.obj
+C:\Users\User\source\repos\OpenGLVisualizer\src\VertexArray.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\VertexArray.obj
+C:\Users\User\source\repos\OpenGLVisualizer\src\VertexBuffer.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\VertexBuffer.obj
