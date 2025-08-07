@@ -65,19 +65,19 @@ int main() {
 	ib.Unbind();  // 🟢 Odłącz VAO, aby uniknąć przypadkowych zmian
 	shader.Unbind(); // Odłącz shader, aby uniknąć przypadkowych zmian
 
+	Renderer renderer;
+
     float r = 0.0f;
 
     // 🔁 Pętla renderująca
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
 
 		shader.Bind();
 		shader.SetUniform4f("uColor", r, 0.0f, 1.0f - r, 1.0f); // Zmieniaj kolor w czasie
 
-        va.Bind();
-        ib.Bind();  // 🟢 Aktywuj VAO z VBO + konfiguracją
-        GLCall(GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr)));
+		renderer.Clear();
+		renderer.Draw(va, ib, shader);
 
         if (r >= 1.0) r = 0.0;
         r += 0.05f;
