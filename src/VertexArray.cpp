@@ -22,12 +22,15 @@ unsigned int VertexArray::GetRendererID() const {
 	return m_RendererID;
 }
 
-void VertexArray::AddBuffer(const VertexBuffer& vb, unsigned int componentCount) {
+void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout) {
 	Bind();
 	vb.Bind();
-	GLCall(GLCall(glEnableVertexAttribArray(0)));
-	GLCall(GLCall(glVertexAttribPointer(0, componentCount, GL_FLOAT, GL_FALSE, componentCount * sizeof(float), (const void*)0)));
-	// Unbind the VAO to prevent accidental modifications
-	Unbind();
-	vb.Unbind();
+	const auto& elements = layout.GetElements();
+	unsigned int offset = 0;
+	for (unsigned int i = 0; i < elements.size(); i++) {
+		const auto& element = elements[i];
+		GLCall(glEnableVertexAttribArray(i));
+		GLCall(glVertexAttribPointer(i, element.count, element.type, element.normalized, layout.GetStride(), (const void*)offset));
+		offset += element.count * VertexBufferElement::GetSizeOfType(element.type);
+	}
 }

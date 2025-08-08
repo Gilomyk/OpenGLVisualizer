@@ -1,8 +1,14 @@
 #version 330 core
+in vec2 v_texCoord; // Texture coordinates passed from the vertex shader
+
 uniform vec4 uColor;
+uniform sampler2D uTexture;
+
 out vec4 FragColor;
 
 void main()
 {
-    FragColor = uColor;
+    // Sample the texture at the current fragment's coordinates
+    vec4 texColor = texture(uTexture, v_texCoord);
+    FragColor = texColor;
 }

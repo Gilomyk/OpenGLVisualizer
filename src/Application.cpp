@@ -9,8 +9,10 @@
 #include "Renderer.h"
 #include "VertexArray.h"
 #include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
+#include "Texture.h"
 
 // Callback do zmiany rozmiaru okna
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -38,28 +40,39 @@ int main() {
 
     // 🎨 Wierzchołki + kolory
     float vertices[] = {
-    -0.9f, -0.5f, 0.0f,
-    -0.5f,  0.5f, 0.0f,
-    -0.1f, -0.5f, 0.0f,
-
-     0.1f, -0.5f, 0.0f,
-     0.5f,  0.5f, 0.0f,
-     0.9f, -0.5f, 0.0f
+    -0.5f, -0.5f, 0.0f, 0.0f,
+    -0.5f,  0.5f, 0.0f, 1.0f,
+     0.5f, -0.5f, 1.0f, 0.0f,
+     0.5f, 0.5f, 1.0f, 1.0f
     };
 
     unsigned int indices[] = {
     0, 1, 2,   // lewy trójkąt
-    3, 4, 5    // prawy trójkąt
+    1, 2, 3    // prawy trójkąt
     };
+
+	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // Ustawienie funkcji mieszania dla przezroczystości
+	GLCall(glEnable(GL_BLEND)); // Włączenie mieszania kolorów
 
     VertexArray va;
     VertexBuffer vb(vertices, sizeof(vertices));
     IndexBuffer ib(indices, 6);
-    va.AddBuffer(vb, 3);
+    
+    VertexBufferLayout layout;
+    layout.Push<float>(2);  // 2 floaty — pozycja (x,y)
+	layout.Push<float>(2); // 2 floaty — tekstura (u,v)
+
+    va.AddBuffer(vb, layout);
 
     Shader shader("shaders/vertex.vert", "shaders/fragment.frag");
     shader.Bind();
 	shader.SetUniform4f("uColor", 1.0f, 0.0f, 0.0f, 1.0f); // Ustaw kolor na czerwony
+
+	Texture texture("res/textures/bed.png");
+	texture.Bind(); // Zwiąż teksturę, jeśli jest używana w shaderze
+
+	// Ustaw uniform dla tekstury, jeśli jest używana
+	shader.SetUniform1i("uTexture", 0); // Zakładając, że tekstura jest w samym shaderze
 
 	va.Unbind();
 	ib.Unbind();  // 🟢 Odłącz VAO, aby uniknąć przypadkowych zmian
