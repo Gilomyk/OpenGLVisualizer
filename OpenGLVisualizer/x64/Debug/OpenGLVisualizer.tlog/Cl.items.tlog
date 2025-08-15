@@ -4,6 +4,7 @@ C:\Users\User\source\repos\OpenGLVisualizer\src\IndexBuffer.cpp;C:\Users\User\so
 C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Application.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\Renderer.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Renderer.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\Texture.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Texture.obj
+C:\Users\User\source\repos\OpenGLVisualizer\src\vendor\glm\detail\glm.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\glm.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\vendor\stb_image\stb_image.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\stb_image.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\VertexArray.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\VertexArray.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\VertexBuffer.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\VertexBuffer.obj

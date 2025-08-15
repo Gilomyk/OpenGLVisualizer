@@ -14,6 +14,9 @@
 #include "Shader.h"
 #include "Texture.h"
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
 // Callback do zmiany rozmiaru okna
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -40,10 +43,10 @@ int main() {
 
     // 🎨 Wierzchołki + kolory
     float vertices[] = {
-    -0.5f, -0.5f, 0.0f, 0.0f,
-    -0.5f,  0.5f, 0.0f, 1.0f,
-     0.5f, -0.5f, 1.0f, 0.0f,
-     0.5f, 0.5f, 1.0f, 1.0f
+    100.0f, 100.0f, 0.0f, 0.0f,
+    100.0f,  200.0f, 0.0f, 1.0f,
+     200.0f, 100.0f, 1.0f, 0.0f,
+     200.0f, 200.0f, 1.0f, 1.0f
     };
 
     unsigned int indices[] = {
@@ -64,6 +67,12 @@ int main() {
 
     va.AddBuffer(vb, layout);
 
+	glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, -1.0f, 1.0f); // Prosta macierz ortograficzna
+	glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-100.0f, 0.0f, 0.0f));
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 200.0f, 0.0f));
+	
+	glm::mat4 mvp = proj * view * model; // Macierz MVP (Model-View-Projection)
+
     Shader shader("shaders/vertex.vert", "shaders/fragment.frag");
     shader.Bind();
 	shader.SetUniform4f("uColor", 1.0f, 0.0f, 0.0f, 1.0f); // Ustaw kolor na czerwony
@@ -73,6 +82,8 @@ int main() {
 
 	// Ustaw uniform dla tekstury, jeśli jest używana
 	shader.SetUniform1i("uTexture", 0); // Zakładając, że tekstura jest w samym shaderze
+	// Ustaw uniform dla macierzy projekcji
+	shader.SetUniformMat4f("u_MVP", mvp); // Ustaw macierz projekcji w shaderze
 
 	va.Unbind();
 	ib.Unbind();  // 🟢 Odłącz VAO, aby uniknąć przypadkowych zmian
