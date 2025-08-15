@@ -40,4 +40,32 @@
 # debug information files
 *.dwo
 
+# Visual Studio build directories
+x64/
+x86/
+Debug/
+Release/
+[Bb]in/
+[Oo]bj/
+
+# CMake build directories (if you use CMake)
+[Cc]MakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+build/
+
+# Visual Studio specific
+.vscode/
 .vs/
+*.user
+*.suo
+*.ipch
+
+# Cache and temporary files
+*.log
+*.tlog
+*.tmp
+
+# Generated OpenGL shader binaries (if any)
+*.spv
+
