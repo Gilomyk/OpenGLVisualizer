@@ -17,6 +17,10 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
+#include "ImGUI/imgui.h"
+#include "ImGUI/imgui_impl_glfw.h"
+#include "ImGUI/imgui_impl_opengl3.h"
+
 // Callback do zmiany rozmiaru okna
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -43,10 +47,10 @@ int main() {
 
     // 🎨 Wierzchołki + kolory
     float vertices[] = {
-    100.0f, 100.0f, 0.0f, 0.0f,
-    100.0f,  200.0f, 0.0f, 1.0f,
-     200.0f, 100.0f, 1.0f, 0.0f,
-     200.0f, 200.0f, 1.0f, 1.0f
+    -50.0f, -50.0f, 0.0f, 0.0f,
+    -50.0f,  50.0f, 0.0f, 1.0f,
+     50.0f, -50.0f, 1.0f, 0.0f,
+     50.0f, 50.0f, 1.0f, 1.0f
     };
 
     unsigned int indices[] = {
@@ -69,9 +73,6 @@ int main() {
 
 	glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, -1.0f, 1.0f); // Prosta macierz ortograficzna
 	glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-100.0f, 0.0f, 0.0f));
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 200.0f, 0.0f));
-	
-	glm::mat4 mvp = proj * view * model; // Macierz MVP (Model-View-Projection)
 
     Shader shader("shaders/vertex.vert", "shaders/fragment.frag");
     shader.Bind();
@@ -83,7 +84,6 @@ int main() {
 	// Ustaw uniform dla tekstury, jeśli jest używana
 	shader.SetUniform1i("uTexture", 0); // Zakładając, że tekstura jest w samym shaderze
 	// Ustaw uniform dla macierzy projekcji
-	shader.SetUniformMat4f("u_MVP", mvp); // Ustaw macierz projekcji w shaderze
 
 	va.Unbind();
 	ib.Unbind();  // 🟢 Odłącz VAO, aby uniknąć przypadkowych zmian
@@ -91,24 +91,85 @@ int main() {
 
 	Renderer renderer;
 
+ //   // Inicjalizacja GUI
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Włącz obsługę klawiatury
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Włącz obsługę gamepada
+
+	ImGui::StyleColorsDark(); // Ustaw ciemny motyw
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330"); // Użyj wersji OpenGL 3.3
+
+	ImGui::GetIO().FontGlobalScale = 1.0f; // Ustaw skalę czcionki na 1.0f
+
+    // Our state
+    bool show_demo_window = true;
+    bool show_another_window = false;
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+    glm::vec3 translationA(200.0f, 200.0f, 0.0f);
+    glm::vec3 translationB(400.0f, 200.0f, 0.0f);
+
+
     float r = 0.0f;
 
     // 🔁 Pętla renderująca
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        renderer.Clear();
 
-		shader.Bind();
-		shader.SetUniform4f("uColor", r, 0.0f, 1.0f - r, 1.0f); // Zmieniaj kolor w czasie
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
-		renderer.Clear();
-		renderer.Draw(va, ib, shader);
+
+        // Setting the first uniform
+        {
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), translationA);
+            glm::mat4 mvp = proj * view * model;
+
+            shader.Bind();
+            shader.SetUniformMat4f("u_MVP", mvp);
+            renderer.Draw(va, ib, shader);
+        }
+        
+        {
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), translationB);
+            glm::mat4 mvp = proj * view * model;
+
+            shader.Bind();
+            shader.SetUniformMat4f("u_MVP", mvp);
+            renderer.Draw(va, ib, shader);
+        }
 
         if (r >= 1.0) r = 0.0;
         r += 0.05f;
 
+        /*if (show_demo_window)
+            ImGui::ShowDemoWindow(&show_demo_window);*/
+
+
+        {
+            static float f = 0.0f;
+
+            ImGui::SliderFloat3("Translation A", &translationA.r, 0.0f, 800.0f);
+            ImGui::SliderFloat3("Translation B", &translationB.r, 0.0f, 800.0f);
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        }
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
     glfwTerminate();
     return 0;
 }
