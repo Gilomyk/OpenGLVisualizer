@@ -41,6 +41,10 @@
 *.dwo
 
 # Visual Studio build directories
+OpenGLVisualizer/x64/
+OpenGLVisualizer/x86/
+OpenGLVisualizer/Debug/
+OpenGLVisualizer/Release/
 x64/
 x86/
 Debug/
@@ -68,4 +72,7 @@ build/
 
 # Generated OpenGL shader binaries (if any)
 *.spv
+
+# IMGUI files
+imgui.ini
 
