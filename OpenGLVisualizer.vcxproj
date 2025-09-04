@@ -142,6 +142,7 @@
     <ClCompile Include="src\Core\Camera.cpp" />
     <ClCompile Include="src\GL\Mesh.cpp" />
     <ClCompile Include="src\GL\SphereGen.cpp" />
+    <ClCompile Include="src\Scene\Planet.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\IndexBuffer.cpp" />
@@ -164,6 +165,7 @@
     <ClInclude Include="src\Core\Camera.h" />
     <ClInclude Include="src\GL\Mesh.h" />
     <ClInclude Include="src\GL\SphereGen.h" />
+    <ClInclude Include="src\Scene\Planet.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\IndexBuffer.h" />
     <ClInclude Include="src\Renderer.h" />
@@ -476,6 +478,8 @@
     <Text Include="shaders\vertex.vert" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\sphereFragment.frag" />
+    <None Include="shaders\sphereVertex.vert" />
     <None Include="src\vendor\glm\detail\func_common.inl" />
     <None Include="src\vendor\glm\detail\func_common_simd.inl" />
     <None Include="src\vendor\glm\detail\func_exponential.inl" />

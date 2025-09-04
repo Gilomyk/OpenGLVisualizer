@@ -15,8 +15,14 @@
 #include "Texture.h"
 #include "GL/Mesh.h"
 
+#include "GL/SphereGen.h"
+
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include <glm/gtc/quaternion.hpp>   // glm::quat, glm::radians -> quaternion
+#include <glm/gtx/quaternion.hpp>   // glm::toMat4
 
 #include "ImGUI/imgui.h"
 #include "ImGUI/imgui_impl_glfw.h"
@@ -25,6 +31,7 @@
 
 #define WIDTH 800
 #define HEIGHT 600
+
 
 // Callback do zmiany rozmiaru okna
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -77,31 +84,28 @@ int main() {
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW); // Ustawienie kierunku zgodnego z ruchem wskazówek zegara jako przód
 
-    // 🎨 Wierzchołki + kolory
-    float vertices[] = {
-    -50.0f, -50.0f, -90.0f, 0.0f, 0.0f,
-    -50.0f,  50.0f, -90.0f, 0.0f, 4.0f,
-     50.0f, -50.0f, -90.0f, 4.0f, 0.0f,
-     50.0f, 50.0f, -90.0f, 4.0f, 4.0f
-    };
+    GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // Ustawienie funkcji mieszania dla przezroczystości
+    GLCall(glEnable(GL_BLEND)); // Włączenie mieszania kolorów
 
-    unsigned int indices[] = {
-    0, 2, 1,   // zamiast 0,1,2
-    1, 2, 3
-    };
+	// 1. obiekt - sfera
+    Texture earthTex("res/textures/earth.png");
 
-	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // Ustawienie funkcji mieszania dla przezroczystości
-	GLCall(glEnable(GL_BLEND)); // Włączenie mieszania kolorów
+    SphereGen sphereA(30.0f, 20, 20);
 
-	// 🔺 Konfiguracja VAO, VBO, IBO
-    VertexArray va;
-    VertexBuffer vb(vertices, sizeof(vertices));
-    IndexBuffer ib(indices, 6);
-    
-    VertexBufferLayout layout;
-    layout.Push<float>(3);  // 3 floaty — pozycja (x,y, z)
-	layout.Push<float>(2); // 2 floaty — tekstura (u,v)
-    va.AddBuffer(vb, layout);
+    VertexBufferLayout layoutA;
+    layoutA.Push<float>(3); // 3 floaty — pozycja (x,y,z)
+    layoutA.Push<float>(3); // 3 floaty — normalne (nx, ny, nz)
+    layoutA.Push<float>(2); // 2 floaty — tekstura (u,v)
+
+    Mesh sphereMeshA(
+        sphereA.GetVertices().data(),
+        static_cast<unsigned int>(sphereA.GetVertices().size()),
+        sphereA.GetIndices().data(),
+        static_cast<unsigned int>(sphereA.GetIndices().size()),
+        layoutA,
+        &earthTex
+    );
+
 
 	// 📐 Ustawienia kamery
     Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
@@ -109,21 +113,9 @@ int main() {
     camera.SetPosition(glm::vec3(0.0f, 0.0f, 200.0f));
     camera.LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
 
-	// 🔥 Shader
+	// Shader i renderer
     Shader shader("shaders/vertex.vert", "shaders/fragment.frag");
-    shader.Bind();
-	shader.SetUniform4f("uColor", 1.0f, 0.0f, 0.0f, 1.0f); // Ustaw kolor na czerwony
-
-	Texture texture("res/textures/bed.png");
-
-	va.Unbind();
-	ib.Unbind();  // 🟢 Odłącz VAO, aby uniknąć przypadkowych zmian
-	shader.Unbind(); // Odłącz shader, aby uniknąć przypadkowych zmian
-
-    Mesh mesh(vertices, sizeof(vertices) / sizeof(float),
-        indices, sizeof(indices) / sizeof(unsigned int),
-        layout, &texture);
-
+    Shader sphereShader("shaders/sphereVertex.vert", "shaders/sphereFragment.frag");
 	Renderer renderer;
 
     // Inicjalizacja GUI
@@ -151,6 +143,9 @@ int main() {
     glm::vec3 scaleA(1.0f, 1.0f, 1.0f);
     glm::vec3 scaleB(1.0f, 1.0f, 1.0f);
 
+	glm::vec3 rotationA(0.0f, 0.0f, 0.0f);
+	glm::vec3 rotationB(0.0f, 0.0f, 0.0f);
+
 
     float r = 0.0f;
 
@@ -165,41 +160,26 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-
-        // Setting the first uniform
-        {
-            glm::mat4 model = glm::mat4(1.0f); // macierz jednostkowa
-            model = glm::translate(model, translationA);
-            model = glm::scale(model, scaleA); // zmniejsza 2x
-
-            glm::mat4 mvp = camera.GetProjectionMatrix() * camera.GetViewMatrix() * model;
-
-            shader.Bind();
-            shader.SetUniformMat4f("u_MVP", mvp);
-
-            renderer.Draw(mesh, shader);
-        }
-
-		// Setting the second uniform
+        // Sphere uniform
         {
             glm::mat4 model = glm::mat4(1.0f); // macierz jednostkowa
             model = glm::translate(model, translationB);
             model = glm::scale(model, scaleB); // zmniejsza 2x
+            
+            glm::quat q = glm::quat(glm::radians(rotationB));
+            model *= glm::toMat4(q);
 
             glm::mat4 mvp = camera.GetProjectionMatrix() * camera.GetViewMatrix() * model;
 
-            shader.Bind();
-            shader.SetUniformMat4f("u_MVP", mvp);
+            sphereShader.Bind();
+            sphereShader.SetUniformMat4f("u_MVP", mvp);
 
-            renderer.Draw(mesh, shader);
+            renderer.Draw(sphereMeshA, sphereShader);
         }
+
 
         if (r >= 1.0) r = 0.0;
         r += 0.05f;
-
-        /*if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);*/
-
 
         {
             static float f = 0.0f;
@@ -209,6 +189,14 @@ int main() {
 
 			ImGui::SliderFloat3("Scale A", &scaleA.r, 0.1f, 10.0f);
 			ImGui::SliderFloat3("Scale B", &scaleB.r, 0.1f, 10.0f);
+
+			ImGui::SliderFloat3("Rotation A", &rotationA.r, 0.0f, 360.0f);
+			ImGui::SliderFloat3("Rotation B", &rotationB.r, 0.0f, 360.0f);
+
+			ImGui::Checkbox("Demo Window", &show_demo_window); // Przełącznik okna demo
+			ImGui::Checkbox("Another Window", &show_another_window); // Przełącznik innego okna
+
+			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edytor koloru
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         }
