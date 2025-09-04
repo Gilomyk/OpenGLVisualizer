@@ -1,2 +1,5 @@
 ﻿  Application.cpp
+  Mesh.cpp
+  Renderer.cpp
+  Generowanie kodu...
   OpenGLVisualizer.vcxproj -> C:\Users\User\source\repos\OpenGLVisualizer\x64\Debug\OpenGLVisualizer.exe

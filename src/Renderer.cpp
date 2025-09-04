@@ -2,6 +2,7 @@
 #include "VertexArray.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
+#include "GL/Mesh.h"
 
 #include <iostream>
 
@@ -24,12 +25,12 @@ void Renderer::Clear() const {
 	GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }
 
-void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const {
-	va.Bind();
-	ib.Bind();
-	shader.Bind();
-	GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
-	shader.Unbind();
-	va.Unbind();
-	ib.Unbind();
+void Renderer::Draw(const Mesh& mesh, const Shader& shader) const {
+	if (mesh.GetTexture())
+	{
+		mesh.GetTexture()->Bind();
+        shader.SetUniform1i("uTexture", 0);
+	}
+	mesh.Bind();
+	GLCall(glDrawElements(GL_TRIANGLES, mesh.GetIndexCount(), GL_UNSIGNED_INT, nullptr));
 }
