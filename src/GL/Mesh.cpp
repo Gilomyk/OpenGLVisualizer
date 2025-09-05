@@ -1,5 +1,9 @@
 #include "Mesh.h"
 
+Mesh::Mesh()
+    : m_VBO(nullptr, 0), m_IBO(nullptr, 0), m_Texture(nullptr)
+{ }
+
 Mesh::Mesh(const float* vertices, unsigned int vertexCount,
     const unsigned int* indices, unsigned int indexCount,
     const VertexBufferLayout& layout, Texture* texture)
@@ -8,7 +12,14 @@ Mesh::Mesh(const float* vertices, unsigned int vertexCount,
     m_Layout(layout),
     m_Texture(texture)
 {
+    std::cout << "Mesh constructor start" << std::endl;
+    std::cout << "VBO ID: " << m_VBO.GetRendererID() << std::endl;
+    std::cout << "IBO ID: " << m_IBO.GetRendererID() << std::endl;
+
     m_VAO.AddBuffer(m_VBO, m_Layout);
+
+    std::cout << "VAO ID after AddBuffer: " << m_VAO.GetRendererID() << std::endl;
+    std::cout << "Mesh constructor end" << std::endl;
 }
 
 void Mesh::Bind() const {

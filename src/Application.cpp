@@ -28,6 +28,7 @@
 #include "ImGUI/imgui_impl_glfw.h"
 #include "ImGUI/imgui_impl_opengl3.h"
 #include "Core/Camera.h"
+#include "Scene/Planet.h"
 
 #define WIDTH 800
 #define HEIGHT 600
@@ -89,6 +90,12 @@ int main() {
 
 	// 1. obiekt - sfera
     Texture earthTex("res/textures/earth.png");
+
+    //Planet earth(30.0f, 20, 20, &earthTex);
+
+    //earth.SetPosition(glm::vec3(0.0f, 0.0f, -90.0f));
+    //earth.SetScale(glm::vec3(1.0f));
+    //earth.SetRotation(glm::vec3(0.0f));
 
     SphereGen sphereA(30.0f, 20, 20);
 
@@ -177,6 +184,7 @@ int main() {
             renderer.Draw(sphereMeshA, sphereShader);
         }
 
+        //earth.Draw(sphereShader, camera);
 
         if (r >= 1.0) r = 0.0;
         r += 0.05f;

@@ -15,6 +15,9 @@ class Mesh {
 	Texture* m_Texture;
 
 public:
+
+	Mesh();
+
 	Mesh(const float* vertices, unsigned int vertexCount,
 		const unsigned int* indices, unsigned int indexCount,
 		const VertexBufferLayout& layout, Texture* texture = nullptr);
