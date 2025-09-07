@@ -474,12 +474,10 @@
     <ClInclude Include="src\VertexBufferLayout.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="shaders\fragment.frag" />
-    <Text Include="shaders\vertex.vert" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="shaders\sphereFragment.frag" />
     <None Include="shaders\sphereVertex.vert" />
+    <None Include="shaders\unlit_emissive.frag" />
+    <None Include="shaders\unlit_emissive.vert" />
     <None Include="src\vendor\glm\detail\func_common.inl" />
     <None Include="src\vendor\glm\detail\func_common_simd.inl" />
     <None Include="src\vendor\glm\detail\func_exponential.inl" />
@@ -619,6 +617,9 @@
     <None Include="src\vendor\glm\gtx\vector_angle.inl" />
     <None Include="src\vendor\glm\gtx\vector_query.inl" />
     <None Include="src\vendor\glm\gtx\wrap.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\Downloads\sun.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

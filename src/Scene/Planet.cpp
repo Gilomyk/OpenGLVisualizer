@@ -24,23 +24,7 @@ Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount, 
 
 }
 
-//void Planet::Draw(Shader& shader, Renderer& renderer, const Camera& camera) {
-//    glm::mat4 model = glm::mat4(1.0f);
-//    model = glm::translate(model, m_Translation);
-//    model = glm::scale(model, m_Scale);
-//
-//    glm::quat q = glm::quat(glm::radians(m_Rotation));
-//    model *= glm::toMat4(q);
-//
-//    glm::mat4 mvp = camera.GetProjectionMatrix() * camera.GetViewMatrix() * model;
-//
-//    shader.Bind();
-//    shader.SetUniformMat4f("u_MVP", mvp);
-//
-//    renderer.Draw(m_Mesh, shader);
-//}
-
-void Planet::Draw(Shader& shader, Renderer& renderer, const Camera& camera) {
+void Planet::DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera) {
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, m_Translation);
     model = glm::scale(model, m_Scale);
@@ -54,13 +38,29 @@ void Planet::Draw(Shader& shader, Renderer& renderer, const Camera& camera) {
     shader.SetUniformMat4f("uProjection", camera.GetProjectionMatrix());
     shader.SetUniformMat3f("uNormalMatrix", normalMatrix);
 
-    shader.SetUniform3fv("uLightPos", glm::vec3(100.0f, 100.0f, 100.0f));
+    shader.SetUniform3fv("uLightPos", glm::vec3(0.0f, 0.0f, 0.0f));
     shader.SetUniform3fv("uLightAmbient", glm::vec3(0.2f, 0.2f, 0.2f));
     shader.SetUniform3fv("uLightDiffuse", glm::vec3(0.7f, 0.7f, 0.7f));
     shader.SetUniform3fv("uLightSpecular", glm::vec3(1.0f, 1.0f, 1.0f));
 
     shader.SetUniform3fv("uViewPos", camera.GetPosition());
     shader.SetUniform1f("uShininess", 32.0f);
+
+    renderer.Draw(m_Mesh, shader);
+}
+
+void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, m_Translation);
+    model = glm::scale(model, m_Scale);
+    model *= glm::toMat4(glm::quat(glm::radians(m_Rotation)));
+
+    shader.Bind();
+    shader.SetUniformMat4f("uModel", model);
+    shader.SetUniformMat4f("uView", camera.GetViewMatrix());
+    shader.SetUniformMat4f("uProjection", camera.GetProjectionMatrix());
+
+    shader.SetUniform3f("uEmissiveColor", 1.0f, 0.9f, 0.3f);
 
     renderer.Draw(m_Mesh, shader);
 }

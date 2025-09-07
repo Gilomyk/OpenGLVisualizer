@@ -1012,10 +1012,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="shaders\vertex.vert" />
-    <Text Include="shaders\fragment.frag" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="src\vendor\glm\detail\func_common.inl">
       <Filter>Pliki nagłówkowe</Filter>
     </None>
@@ -1435,5 +1431,12 @@
     </None>
     <None Include="shaders\sphereVertex.vert" />
     <None Include="shaders\sphereFragment.frag" />
+    <None Include="shaders\unlit_emissive.vert" />
+    <None Include="shaders\unlit_emissive.frag" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\Downloads\sun.png">
+      <Filter>Pliki zasobów</Filter>
+    </Image>
   </ItemGroup>
 </Project>

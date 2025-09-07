@@ -32,5 +32,6 @@ public:
     glm::vec3& GetScale() { return m_Scale; }
     glm::vec3& GetRotation() { return m_Rotation; }
 
-    void Draw(Shader& shader, Renderer& renderer, const Camera& camera);
+    void DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera);
+    void DrawSun(Shader& shader, Renderer& renderer, const Camera& camera);
 };

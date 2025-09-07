@@ -90,35 +90,18 @@ int main() {
 
 	// 1. obiekt - sfera
     Texture earthTex("res/textures/earth.png");
+	Texture sunTex("res/textures/sun.png");
 
     Planet earth(30.0f, 50, 50, &earthTex);
-
-    //SphereGen sphereA(30.0f, 20, 20);
-
-    //VertexBufferLayout layoutA;
-    //layoutA.Push<float>(3); // 3 floaty — pozycja (x,y,z)
-    //layoutA.Push<float>(3); // 3 floaty — normalne (nx, ny, nz)
-    //layoutA.Push<float>(2); // 2 floaty — tekstura (u,v)
-
-    //Mesh sphereMeshA(
-    //    sphereA.GetVertices().data(),
-    //    static_cast<unsigned int>(sphereA.GetVertices().size()),
-    //    sphereA.GetIndices().data(),
-    //    static_cast<unsigned int>(sphereA.GetIndices().size()),
-    //    layoutA,
-    //    &earthTex
-    //);
-
+	Planet sun(50.0f, 50, 50, &sunTex);
 
 	// 📐 Ustawienia kamery
     Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
 
-    camera.SetPosition(glm::vec3(0.0f, 0.0f, 200.0f));
-    camera.LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
-
 	// Shader i renderer
     Shader shader("shaders/vertex.vert", "shaders/fragment.frag");
     Shader sphereShader("shaders/sphereVertex.vert", "shaders/sphereFragment.frag");
+    Shader sunShader("shaders/unlit_emissive.vert", "shaders/unlit_emissive.frag");
 	Renderer renderer;
 
     // Inicjalizacja GUI
@@ -140,17 +123,21 @@ int main() {
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    glm::vec3 translationA(0.0f, 0.0f, 0.0f);
-    glm::vec3 translationB(0.0f, 0.0f, 0.0f);
+    // Zmienne obrotu ziemi wokół słońca i wokół własnej osi
+	float r = 120.0f; // promień orbity
+	float alpha = 0.0f;
+	float omega = 0.01f; // prędkość kątowa Ziemi wokół Słońca
+	float theta = 0.0f;
+	float omega2 = 0.05f; // prędkość kątowa Ziemi wokół własnej osi
 
-    glm::vec3 scaleA(1.0f, 1.0f, 1.0f);
-    glm::vec3 scaleB(1.0f, 1.0f, 1.0f);
+    // Zmienne obrotu kamery
+    float camAlpha = 0.0f;   // kąt poziomy
+    float camBeta = 0.0f;   // kąt pionowy
+    float camR = 200.0f; // promień orbity
 
-	glm::vec3 rotationA(0.0f, 0.0f, 0.0f);
-	glm::vec3 rotationB(0.0f, 0.0f, 0.0f);
-
-
-    float r = 0.0f;
+	// Skalowanie XY
+    static float earthScale = 1.0f;
+	static float sunScale = 1.0f;
 
     // 🔁 Pętla renderująca
     while (!glfwWindowShouldClose(window)) {
@@ -163,78 +150,46 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Sphere uniform
-        //{
-        //    glm::mat4 model = glm::mat4(1.0f); // macierz jednostkowa
-        //    model = glm::translate(model, translationB);
-        //    model = glm::scale(model, scaleB); // zmniejsza 2x
-
-        //    glm::quat q = glm::quat(glm::radians(rotationB));
-        //    model *= glm::toMat4(q);
-
-        //    glm::mat4 mvp = camera.GetProjectionMatrix() * camera.GetViewMatrix() * model;
-
-        //    sphereShader.Bind();
-        //    sphereShader.SetUniformMat4f("u_MVP", mvp);
-
-        //    renderer.Draw(sphereMeshA, sphereShader);
-        //}
-
-        // Sphere uniform with lightning
-        /*{
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, translationB);
-            model = glm::scale(model, scaleB);
-            model *= glm::toMat4(glm::quat(glm::radians(rotationB)));
-
-            glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
-
-            shader.Bind();
-            shader.SetUniformMat4f("uModel", model);
-            shader.SetUniformMat4f("uView", camera.GetViewMatrix());
-            shader.SetUniformMat4f("uProjection", camera.GetProjectionMatrix());
-            shader.SetUniformMat3f("uNormalMatrix", normalMatrix);
-
-            shader.SetUniform3fv("uLightPos", glm::vec3(100.0f, 100.0f, 100.0f));
-            shader.SetUniform3fv("uLightAmbient", glm::vec3(0.2f, 0.2f, 0.2f));
-            shader.SetUniform3fv("uLightDiffuse", glm::vec3(0.7f, 0.7f, 0.7f));
-            shader.SetUniform3fv("uLightSpecular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-            shader.SetUniform3fv("uViewPos", camera.GetPosition());
-            shader.SetUniform1f("uShininess", 32.0f);
-
-            renderer.Draw(sphereMeshA, sphereShader);
-        }*/
-
-
-        earth.SetPosition(translationB);
-        earth.SetScale(scaleB);
-        earth.SetRotation(rotationB);
-
-        earth.Draw(sphereShader, renderer, camera);
-
-        if (r >= 1.0) r = 0.0;
-        r += 0.05f;
-
+        // GUI
         {
-            static float f = 0.0f;
+            ImGui::SliderFloat("Earth Scale", &earthScale, 0.1f, 10.0f);
+			ImGui::SliderFloat("Sun Scale", &sunScale, 0.1f, 10.0f);
 
-            ImGui::SliderFloat3("Translation A", &translationA.r, 0.0f, (float)WIDTH);
-            ImGui::SliderFloat3("Translation B", &translationB.r, 0.0f, (float)WIDTH);
+			ImGui::SliderFloat("Camera Radius", &camR, 50.0f, 500.0f);
+			ImGui::SliderFloat("Camera Alpha", &camAlpha, 0.0f, 2.0f * 3.14159f);
+			ImGui::SliderFloat("Camera Beta", &camBeta, -1.5f, 1.5f);
 
-			ImGui::SliderFloat3("Scale A", &scaleA.r, 0.1f, 10.0f);
-			ImGui::SliderFloat3("Scale B", &scaleB.r, 0.1f, 10.0f);
+            ImGui::Checkbox("Demo Window", &show_demo_window); // Przełącznik okna demo
+            ImGui::Checkbox("Another Window", &show_another_window); // Przełącznik innego okna
 
-			ImGui::SliderFloat3("Rotation A", &rotationA.r, 0.0f, 360.0f);
-			ImGui::SliderFloat3("Rotation B", &rotationB.r, 0.0f, 360.0f);
-
-			ImGui::Checkbox("Demo Window", &show_demo_window); // Przełącznik okna demo
-			ImGui::Checkbox("Another Window", &show_another_window); // Przełącznik innego okna
-
-			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edytor koloru
+            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edytor koloru
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         }
+
+        glm::vec3 scale(earthScale, earthScale, earthScale);
+		glm::vec3 scaleB(sunScale, sunScale, sunScale);
+
+        earth.DrawPlanet(sphereShader, renderer, camera);
+        sun.DrawSun(sunShader, renderer, camera);
+
+		// Aktualizacja pozycji ziemi
+		alpha += omega;
+		theta -= omega2;
+
+		earth.SetPosition(glm::vec3(r * cos(alpha), 0.0f, r * sin(alpha)));
+		earth.SetRotation(glm::vec3(0.0f, glm::degrees(theta), 0.0f));
+		earth.SetScale(scale);
+
+        sun.SetScale(scaleB);
+
+		// Aktualizacja pozycji kamery
+        float x = camR * cos(camBeta) * cos(camAlpha);
+        float y = camR * sin(camBeta);
+        float z = camR * cos(camBeta) * sin(camAlpha);
+
+        camera.SetPosition(glm::vec3(x, y, z));
+        camera.LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
