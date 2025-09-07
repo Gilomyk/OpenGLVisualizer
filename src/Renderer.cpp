@@ -26,13 +26,11 @@ void Renderer::Clear() const {
 	GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }
 
-void Renderer::Draw(const Mesh& mesh, const Shader& shader) const {
-	if (mesh.GetTexture())
-	{
+void Renderer::Draw(const Mesh& mesh, const Shader& shader, GLenum primitiveType) const {
+	if (mesh.GetTexture()) {
 		mesh.GetTexture()->Bind();
-        shader.SetUniform1i("uTexture", 0);
-		//std::cout << "Texture bound with ID: " << mesh.GetTexture()->GetWidth() << "x" << mesh.GetTexture()->GetHeight() << std::endl;
+		shader.SetUniform1i("uTexture", 0);
 	}
 	mesh.Bind();
-	GLCall(glDrawElements(GL_TRIANGLES, mesh.GetIndexCount(), GL_UNSIGNED_INT, nullptr));
+	GLCall(glDrawElements(primitiveType, mesh.GetIndexCount(), GL_UNSIGNED_INT, nullptr));
 }

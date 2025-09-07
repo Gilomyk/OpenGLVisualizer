@@ -29,6 +29,7 @@
 #include "ImGUI/imgui_impl_opengl3.h"
 #include "Core/Camera.h"
 #include "Scene/Planet.h"
+#include "Scene/Orbit.h"
 
 #define WIDTH 800
 #define HEIGHT 600
@@ -88,20 +89,30 @@ int main() {
     GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // Ustawienie funkcji mieszania dla przezroczystości
     GLCall(glEnable(GL_BLEND)); // Włączenie mieszania kolorów
 
-	// 1. obiekt - sfera
+	// 1. obiekt - sfera (Ziemia i Słońce)
     Texture earthTex("res/textures/earth.png");
 	Texture sunTex("res/textures/sun.png");
 
     Planet earth(30.0f, 50, 50, &earthTex);
 	Planet sun(50.0f, 50, 50, &sunTex);
 
+    // Zmienne obrotu ziemi wokół słońca i wokół własnej osi
+    float r = 120.0f; // promień orbity
+    float alpha = 0.0f;
+    float omega = 0.01f; // prędkość kątowa Ziemi wokół Słońca
+    float theta = 0.0f;
+    float omega2 = 0.05f; // prędkość kątowa Ziemi wokół własnej osi
+
+	// 2. Obiekt - orbita
+	Orbit earthOrbit(r, 100, glm::vec3(1.0f, 1.0f, 1.0f));
+
 	// 📐 Ustawienia kamery
     Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
 
 	// Shader i renderer
-    Shader shader("shaders/vertex.vert", "shaders/fragment.frag");
     Shader sphereShader("shaders/sphereVertex.vert", "shaders/sphereFragment.frag");
     Shader sunShader("shaders/unlit_emissive.vert", "shaders/unlit_emissive.frag");
+	Shader orbitShader("shaders/orbit.vert", "shaders/orbit.frag");
 	Renderer renderer;
 
     // Inicjalizacja GUI
@@ -123,13 +134,6 @@ int main() {
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    // Zmienne obrotu ziemi wokół słońca i wokół własnej osi
-	float r = 120.0f; // promień orbity
-	float alpha = 0.0f;
-	float omega = 0.01f; // prędkość kątowa Ziemi wokół Słońca
-	float theta = 0.0f;
-	float omega2 = 0.05f; // prędkość kątowa Ziemi wokół własnej osi
-
     // Zmienne obrotu kamery
     float camAlpha = 0.0f;   // kąt poziomy
     float camBeta = 0.0f;   // kąt pionowy
@@ -138,6 +142,9 @@ int main() {
 	// Skalowanie XY
     static float earthScale = 1.0f;
 	static float sunScale = 1.0f;
+
+    // obrót orbity
+	glm::vec3 orbitRotation(90.0f, 0.0f, 0.0f);
 
     // 🔁 Pętla renderująca
     while (!glfwWindowShouldClose(window)) {
@@ -155,9 +162,13 @@ int main() {
             ImGui::SliderFloat("Earth Scale", &earthScale, 0.1f, 10.0f);
 			ImGui::SliderFloat("Sun Scale", &sunScale, 0.1f, 10.0f);
 
+			ImGui::SliderFloat3("Orbit Rotation", &orbitRotation.x, 0.0f, 360.0f);
+
 			ImGui::SliderFloat("Camera Radius", &camR, 50.0f, 500.0f);
 			ImGui::SliderFloat("Camera Alpha", &camAlpha, 0.0f, 2.0f * 3.14159f);
 			ImGui::SliderFloat("Camera Beta", &camBeta, -1.5f, 1.5f);
+
+
 
             ImGui::Checkbox("Demo Window", &show_demo_window); // Przełącznik okna demo
             ImGui::Checkbox("Another Window", &show_another_window); // Przełącznik innego okna
@@ -172,6 +183,7 @@ int main() {
 
         earth.DrawPlanet(sphereShader, renderer, camera);
         sun.DrawSun(sunShader, renderer, camera);
+		earthOrbit.DrawOrbit(orbitShader, renderer, camera);
 
 		// Aktualizacja pozycji ziemi
 		alpha += omega;
@@ -182,6 +194,8 @@ int main() {
 		earth.SetScale(scale);
 
         sun.SetScale(scaleB);
+
+		earthOrbit.SetRotation(orbitRotation);
 
 		// Aktualizacja pozycji kamery
         float x = camR * cos(camBeta) * cos(camAlpha);

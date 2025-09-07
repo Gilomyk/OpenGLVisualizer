@@ -14,5 +14,5 @@ bool GLLogCall(const char* function, const char* file, int line);
 class Renderer {
 public:
 	void Clear() const;
-	void Draw(const class Mesh& mesh, const class Shader& shader) const;
+	void Draw(const class Mesh& mesh, const class Shader& shader, GLenum primitiveType) const;
 };

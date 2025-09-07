@@ -78,6 +78,12 @@
     <ClCompile Include="src\Scene\Planet.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="src\Scene\Orbit.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GL\OrbitGen.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader.h">
@@ -1010,6 +1016,15 @@
     <ClInclude Include="src\Scene\Planet.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="src\Scene\Orbit.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GL\OrbitMesh.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GL\OrbitGen.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\vendor\glm\detail\func_common.inl">
@@ -1433,6 +1448,8 @@
     <None Include="shaders\sphereFragment.frag" />
     <None Include="shaders\unlit_emissive.vert" />
     <None Include="shaders\unlit_emissive.frag" />
+    <None Include="shaders\orbit.vert" />
+    <None Include="shaders\orbit.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\sun.png">

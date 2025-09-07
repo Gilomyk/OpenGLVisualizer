@@ -1,6 +1,8 @@
 C:\Users\User\source\repos\OpenGLVisualizer\src\Core\Camera.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Camera.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\GL\Mesh.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Mesh.obj
+C:\Users\User\source\repos\OpenGLVisualizer\src\GL\OrbitGen.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\OrbitGen.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\GL\SphereGen.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\SphereGen.obj
+C:\Users\User\source\repos\OpenGLVisualizer\src\Scene\Orbit.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Orbit.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\Scene\Planet.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Planet.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\Shader.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Shader.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\glad.c;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\glad.obj

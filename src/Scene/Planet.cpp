@@ -1,5 +1,4 @@
 #include "Planet.h"
-#include "../Renderer.h"
 #include <GLFW/glfw3.h>
 
 Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount, Texture* texture)
@@ -46,7 +45,7 @@ void Planet::DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera
     shader.SetUniform3fv("uViewPos", camera.GetPosition());
     shader.SetUniform1f("uShininess", 32.0f);
 
-    renderer.Draw(m_Mesh, shader);
+    renderer.Draw(m_Mesh, shader, GL_TRIANGLES);
 }
 
 void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
@@ -62,5 +61,5 @@ void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
 
     shader.SetUniform3f("uEmissiveColor", 1.0f, 0.9f, 0.3f);
 
-    renderer.Draw(m_Mesh, shader);
+    renderer.Draw(m_Mesh, shader, GL_TRIANGLES);
 }
