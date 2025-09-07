@@ -4,7 +4,13 @@
 
 Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount, Texture* texture)
     : m_Sphere(radius, sectorCount, stackCount),
-	m_Layout(),
+    m_Layout([] {
+        VertexBufferLayout l;
+        l.Push<float>(3); // position
+        l.Push<float>(3); // normal
+        l.Push<float>(2); // texcoord
+        return l;
+    }()),
     m_Mesh(m_Sphere.GetVertices().data(),
         static_cast<unsigned int>(m_Sphere.GetVertices().size()),
         m_Sphere.GetIndices().data(),
@@ -15,24 +21,46 @@ Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount, 
     m_Scale(1.0f),
     m_Rotation(0.0f)
 {
-    m_Layout.Push<float>(3);
-    m_Layout.Push<float>(3);
-    m_Layout.Push<float>(2);
+
 }
 
-void Planet::Draw(Shader& shader, const Camera& camera) {
+//void Planet::Draw(Shader& shader, Renderer& renderer, const Camera& camera) {
+//    glm::mat4 model = glm::mat4(1.0f);
+//    model = glm::translate(model, m_Translation);
+//    model = glm::scale(model, m_Scale);
+//
+//    glm::quat q = glm::quat(glm::radians(m_Rotation));
+//    model *= glm::toMat4(q);
+//
+//    glm::mat4 mvp = camera.GetProjectionMatrix() * camera.GetViewMatrix() * model;
+//
+//    shader.Bind();
+//    shader.SetUniformMat4f("u_MVP", mvp);
+//
+//    renderer.Draw(m_Mesh, shader);
+//}
+
+void Planet::Draw(Shader& shader, Renderer& renderer, const Camera& camera) {
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, m_Translation);
     model = glm::scale(model, m_Scale);
+    model *= glm::toMat4(glm::quat(glm::radians(m_Rotation)));
 
-    glm::quat q = glm::quat(glm::radians(m_Rotation));
-    model *= glm::toMat4(q);
-
-    glm::mat4 mvp = camera.GetProjectionMatrix() * camera.GetViewMatrix() * model;
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
 
     shader.Bind();
-    shader.SetUniformMat4f("u_MVP", mvp);
+    shader.SetUniformMat4f("uModel", model);
+    shader.SetUniformMat4f("uView", camera.GetViewMatrix());
+    shader.SetUniformMat4f("uProjection", camera.GetProjectionMatrix());
+    shader.SetUniformMat3f("uNormalMatrix", normalMatrix);
 
-    m_Mesh.Bind();
-    glDrawElements(GL_TRIANGLES, m_Mesh.GetIndexCount(), GL_UNSIGNED_INT, nullptr);
+    shader.SetUniform3fv("uLightPos", glm::vec3(100.0f, 100.0f, 100.0f));
+    shader.SetUniform3fv("uLightAmbient", glm::vec3(0.2f, 0.2f, 0.2f));
+    shader.SetUniform3fv("uLightDiffuse", glm::vec3(0.7f, 0.7f, 0.7f));
+    shader.SetUniform3fv("uLightSpecular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+    shader.SetUniform3fv("uViewPos", camera.GetPosition());
+    shader.SetUniform1f("uShininess", 32.0f);
+
+    renderer.Draw(m_Mesh, shader);
 }

@@ -15,6 +15,7 @@ public:
 	Camera(float fov, float aspectRatio, float nearPlane, float farPlane);
 
 	void SetPosition(const glm::vec3& position);
+	glm::vec3 GetPosition() const;
 	void LookAt(const glm::vec3& target);
 
 	glm::mat4 GetViewMatrix() const;

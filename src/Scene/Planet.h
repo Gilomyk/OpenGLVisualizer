@@ -3,6 +3,7 @@
 #include "../GL/Mesh.h"
 #include "../GL/SphereGen.h"
 #include "../Shader.h"
+#include "../Renderer.h"
 #include "../Core/Camera.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -14,11 +15,11 @@
 class Planet {
 private:
     SphereGen m_Sphere;
+    VertexBufferLayout m_Layout;
     Mesh m_Mesh;
     glm::vec3 m_Translation;
     glm::vec3 m_Scale;
     glm::vec3 m_Rotation; // w stopniach (Euler)
-    VertexBufferLayout m_Layout;
 
 public:
     Planet(float radius, unsigned int sectorCount, unsigned int stackCount, Texture* texture);
@@ -31,5 +32,5 @@ public:
     glm::vec3& GetScale() { return m_Scale; }
     glm::vec3& GetRotation() { return m_Rotation; }
 
-    void Draw(Shader& shader, const Camera& camera);
+    void Draw(Shader& shader, Renderer& renderer, const Camera& camera);
 };

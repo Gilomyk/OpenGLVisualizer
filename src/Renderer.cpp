@@ -2,6 +2,7 @@
 #include "VertexArray.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
+#include "Renderer.h"
 #include "GL/Mesh.h"
 
 #include <iostream>
@@ -30,6 +31,7 @@ void Renderer::Draw(const Mesh& mesh, const Shader& shader) const {
 	{
 		mesh.GetTexture()->Bind();
         shader.SetUniform1i("uTexture", 0);
+		std::cout << "Texture bound with ID: " << mesh.GetTexture()->GetWidth() << "x" << mesh.GetTexture()->GetHeight() << std::endl;
 	}
 	mesh.Bind();
 	GLCall(glDrawElements(GL_TRIANGLES, mesh.GetIndexCount(), GL_UNSIGNED_INT, nullptr));

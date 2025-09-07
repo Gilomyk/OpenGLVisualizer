@@ -91,27 +91,23 @@ int main() {
 	// 1. obiekt - sfera
     Texture earthTex("res/textures/earth.png");
 
-    //Planet earth(30.0f, 20, 20, &earthTex);
+    Planet earth(30.0f, 50, 50, &earthTex);
 
-    //earth.SetPosition(glm::vec3(0.0f, 0.0f, -90.0f));
-    //earth.SetScale(glm::vec3(1.0f));
-    //earth.SetRotation(glm::vec3(0.0f));
+    //SphereGen sphereA(30.0f, 20, 20);
 
-    SphereGen sphereA(30.0f, 20, 20);
+    //VertexBufferLayout layoutA;
+    //layoutA.Push<float>(3); // 3 floaty — pozycja (x,y,z)
+    //layoutA.Push<float>(3); // 3 floaty — normalne (nx, ny, nz)
+    //layoutA.Push<float>(2); // 2 floaty — tekstura (u,v)
 
-    VertexBufferLayout layoutA;
-    layoutA.Push<float>(3); // 3 floaty — pozycja (x,y,z)
-    layoutA.Push<float>(3); // 3 floaty — normalne (nx, ny, nz)
-    layoutA.Push<float>(2); // 2 floaty — tekstura (u,v)
-
-    Mesh sphereMeshA(
-        sphereA.GetVertices().data(),
-        static_cast<unsigned int>(sphereA.GetVertices().size()),
-        sphereA.GetIndices().data(),
-        static_cast<unsigned int>(sphereA.GetIndices().size()),
-        layoutA,
-        &earthTex
-    );
+    //Mesh sphereMeshA(
+    //    sphereA.GetVertices().data(),
+    //    static_cast<unsigned int>(sphereA.GetVertices().size()),
+    //    sphereA.GetIndices().data(),
+    //    static_cast<unsigned int>(sphereA.GetIndices().size()),
+    //    layoutA,
+    //    &earthTex
+    //);
 
 
 	// 📐 Ustawienia kamery
@@ -168,23 +164,54 @@ int main() {
         ImGui::NewFrame();
 
         // Sphere uniform
-        {
-            glm::mat4 model = glm::mat4(1.0f); // macierz jednostkowa
+        //{
+        //    glm::mat4 model = glm::mat4(1.0f); // macierz jednostkowa
+        //    model = glm::translate(model, translationB);
+        //    model = glm::scale(model, scaleB); // zmniejsza 2x
+
+        //    glm::quat q = glm::quat(glm::radians(rotationB));
+        //    model *= glm::toMat4(q);
+
+        //    glm::mat4 mvp = camera.GetProjectionMatrix() * camera.GetViewMatrix() * model;
+
+        //    sphereShader.Bind();
+        //    sphereShader.SetUniformMat4f("u_MVP", mvp);
+
+        //    renderer.Draw(sphereMeshA, sphereShader);
+        //}
+
+        // Sphere uniform with lightning
+        /*{
+            glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, translationB);
-            model = glm::scale(model, scaleB); // zmniejsza 2x
-            
-            glm::quat q = glm::quat(glm::radians(rotationB));
-            model *= glm::toMat4(q);
+            model = glm::scale(model, scaleB);
+            model *= glm::toMat4(glm::quat(glm::radians(rotationB)));
 
-            glm::mat4 mvp = camera.GetProjectionMatrix() * camera.GetViewMatrix() * model;
+            glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
 
-            sphereShader.Bind();
-            sphereShader.SetUniformMat4f("u_MVP", mvp);
+            shader.Bind();
+            shader.SetUniformMat4f("uModel", model);
+            shader.SetUniformMat4f("uView", camera.GetViewMatrix());
+            shader.SetUniformMat4f("uProjection", camera.GetProjectionMatrix());
+            shader.SetUniformMat3f("uNormalMatrix", normalMatrix);
+
+            shader.SetUniform3fv("uLightPos", glm::vec3(100.0f, 100.0f, 100.0f));
+            shader.SetUniform3fv("uLightAmbient", glm::vec3(0.2f, 0.2f, 0.2f));
+            shader.SetUniform3fv("uLightDiffuse", glm::vec3(0.7f, 0.7f, 0.7f));
+            shader.SetUniform3fv("uLightSpecular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+            shader.SetUniform3fv("uViewPos", camera.GetPosition());
+            shader.SetUniform1f("uShininess", 32.0f);
 
             renderer.Draw(sphereMeshA, sphereShader);
-        }
+        }*/
 
-        //earth.Draw(sphereShader, camera);
+
+        earth.SetPosition(translationB);
+        earth.SetScale(scaleB);
+        earth.SetRotation(rotationB);
+
+        earth.Draw(sphereShader, renderer, camera);
 
         if (r >= 1.0) r = 0.0;
         r += 0.05f;

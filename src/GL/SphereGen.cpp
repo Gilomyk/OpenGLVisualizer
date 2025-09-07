@@ -41,7 +41,7 @@ void SphereGen::generateSphere() {
 			vertices.push_back(nz);
 
 			// Wspó³rzêdne tekstury
-			u = (float)j / sectorCount;
+			u = 1.0f - (float)j / sectorCount;
 			v = (float)i / stackCount;
 			vertices.push_back(u);
 			vertices.push_back(v);

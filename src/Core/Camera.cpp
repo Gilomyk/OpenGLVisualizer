@@ -12,6 +12,10 @@ void Camera::SetPosition(const glm::vec3& pos) {
 	viewMatrix = glm::lookAt(position, target, up);
 }
 
+glm::vec3 Camera::GetPosition() const {
+	return position;
+}
+
 void Camera::LookAt(const glm::vec3& tgt) {
 	target = tgt;
 	viewMatrix = glm::lookAt(position, target, up);

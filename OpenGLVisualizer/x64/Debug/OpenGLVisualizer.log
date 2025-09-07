@@ -1,6 +1,2 @@
-﻿  Application.cpp
-  Mesh.cpp
-  Planet.cpp
-  Generowanie kodu...
-LINK : warning LNK4098: domyślna biblioteka "MSVCRT" powoduje konflikt z innymi bibliotekami; użyj opcji /NODEFAULTLIB:biblioteka
+﻿  SphereGen.cpp
   OpenGLVisualizer.vcxproj -> C:\Users\User\source\repos\OpenGLVisualizer\x64\Debug\OpenGLVisualizer.exe
