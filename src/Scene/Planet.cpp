@@ -1,7 +1,10 @@
 #include "Planet.h"
 #include <GLFW/glfw3.h>
+#include <glm/gtx/euler_angles.hpp>
 
-Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount, Texture* texture)
+Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount, 
+               float orbitRadius, glm::vec3 orbitTilt, float orbitSpeed, float spinSpeed,
+               Planet* parent, Texture* texture, bool enableOrbit)
     : m_Sphere(radius, sectorCount, stackCount),
     m_Layout([] {
         VertexBufferLayout l;
@@ -20,6 +23,40 @@ Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount, 
     m_Scale(1.0f),
     m_Rotation(0.0f)
 {
+	m_OrbitRadius = orbitRadius;
+    m_OrbitTilt = orbitTilt;
+	m_OrbitSpeed = orbitSpeed;
+	m_SpinSpeed = spinSpeed;
+	m_OrbitAngle = 0.0f;
+	m_SpinAngle = 0.0f;
+	m_Parent = parent;
+
+    if (enableOrbit && orbitRadius > 0.0f) {
+        m_Orbit = std::make_unique<Orbit>(orbitRadius, 100, glm::vec3(1.0f));
+		m_Orbit->SetPosition(m_Parent ? m_Parent->GetPosition() : glm::vec3(0.0f));
+		m_Orbit->SetRotation(m_OrbitTilt);
+    }
+}
+
+void Planet::Update(float dt) {
+	m_OrbitAngle += m_OrbitSpeed * dt;
+	if (m_OrbitAngle > 360.0f) m_OrbitAngle -= 360.0f;
+
+	m_SpinAngle += m_SpinSpeed * dt;
+	if (m_SpinAngle > 360.0f) m_SpinAngle -= 360.0f;
+
+	float rad = glm::radians(m_OrbitAngle);
+	glm::vec3 orbitPos(m_OrbitRadius * cos(rad), 0.0f, m_OrbitRadius * sin(rad));
+
+    glm::mat4 tilt = glm::yawPitchRoll(glm::radians(m_OrbitTilt.y),
+        glm::radians(m_OrbitTilt.x),
+        glm::radians(m_OrbitTilt.z));
+
+    glm::vec3 rotatedPos = glm::vec3(tilt * glm::vec4(orbitPos, 1.0));
+
+    m_Translation = m_Parent ? m_Parent->GetPosition() + rotatedPos : rotatedPos;
+	m_Rotation.y = m_SpinAngle; // Rotacja wokó³ osi Y
+
 
 }
 

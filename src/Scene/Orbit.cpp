@@ -15,7 +15,7 @@ Orbit::Orbit(float radius, int segments, glm::vec3 orbitColor)
 		m_Layout),
 	m_Translation(0.0f),
 	m_Scale(1.0f),
-	m_Rotation(0.0f, 90.0f, 0.0f)
+	m_Rotation(0.0f, 0.0f, 0.0f)
 {   
 	m_OrbitColor = orbitColor;
 }
