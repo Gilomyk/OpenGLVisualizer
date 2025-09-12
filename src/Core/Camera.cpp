@@ -22,22 +22,38 @@ glm::mat4 Camera::GetProjectionMatrix() const {
 }
 
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime) {
-	float velocity = MovementSpeed * deltaTime;
+	glm::vec3 accel(0.0f);
 
-	if (direction == FORWARD)
-		//std::cout << "W pressed\n";
-		Position += Front * velocity;
-	if (direction == BACKWARD)
-		Position -= Front * velocity;
-	if (direction == LEFT)
-		Position -= Right * velocity;
-	if (direction == RIGHT)
-		Position += Right * velocity;
-	if (direction == UPWARD)
-		Position += Up * velocity;
-	if (direction == DOWNWARD)
-		Position -= Up * velocity;
+	float currentAcc = acceleration;
+
+	if (direction == FORWARD)  accel += Front * currentAcc;
+	if (direction == BACKWARD) accel -= Front * currentAcc;
+	if (direction == LEFT)     accel -= Right * currentAcc;
+	if (direction == RIGHT)    accel += Right * currentAcc;
+	if (direction == UPWARD)   accel += Up * currentAcc;
+	if (direction == DOWNWARD) accel -= Up * currentAcc;
+
+	m_Velocity += accel * deltaTime;
+
+	// Clamp
+	if (glm::length(m_Velocity) > maxSpeed) {
+		m_Velocity = glm::normalize(m_Velocity) * maxSpeed;
+	}
 }
+
+void Camera::Update(float deltaTime) {
+	// Ruch kamery wg Velocity
+	Position += m_Velocity * deltaTime;
+
+	// Hamowanie naturalne
+	m_Velocity -= m_Velocity * Damping * deltaTime;
+
+	// Zapobiegamy "oscylacjom" – jak prêdkoœæ bardzo ma³a to zerujemy
+	if (glm::length(m_Velocity) < 0.001f)
+		m_Velocity = glm::vec3(0.0f);
+}
+
+
 
 void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch) {
 	xoffset *= MouseSensitivity;

@@ -22,6 +22,13 @@ public:
 	float MouseSensitivity = 0.1f;
 	float Zoom = 45.0f;
 
+	// Parametry ruchu z przyspieszeniem
+	bool enableAcceleration = true;
+	float acceleration = 500.0f;
+	float maxSpeed = 1000.0f;
+	float Damping = 5.0f;
+	glm::vec3 m_Velocity = glm::vec3(0.0f);
+
 	// Dane kamery
 	glm::vec3 Position;
 	glm::vec3 Front;
@@ -39,6 +46,7 @@ public:
 	void ProcessKeyboard(Camera_Movement direction, float deltaTime);
 	void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
 	void ProcessMouseScroll(float yoffset);
+	void Update(float deltaTime);
 
 	glm::vec3 GetPosition() const { return Position; }
 

@@ -39,6 +39,8 @@
 
 // Ustawienia kamery
 Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
+bool cameraMode = false;
+
 // Callback do zmiany rozmiaru okna
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -50,41 +52,16 @@ float getDeltaTime() {
     double currentTime = glfwGetTime();
     float delta = float(currentTime - lastTime);
     lastTime = currentTime;
+    if (delta < 0.01f) delta = 0.01f;
+    if (delta > 0.033f) delta = 0.033f;
+	//std::cout << "Delta time: " << delta << " s\n";
     return delta;
 }
 
-// funkcja do przetwarzania wejścia z klawiatury
-void processInput(GLFWwindow* window) {
-    float deltaTime = getDeltaTime();
-
-	// ruch kamery WSAD + SPACJA + SHIFT
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		camera.ProcessKeyboard(UPWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-		camera.ProcessKeyboard(DOWNWARD, deltaTime);
-
-	// centrowanie na (0,0,0)
-    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-        camera.CenterOn(glm::vec3(0.0f));
-    }
-
-	// blokada kursora myszy
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    }
-}
-
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (!cameraMode)
+        return;
+
     static float lastX = 400, lastY = 300;
     static bool firstMouse = true;
 
@@ -104,7 +81,46 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    if (!cameraMode)
+        return;
+
     camera.ProcessMouseScroll((float)yoffset);
+}
+
+// funkcja do przetwarzania wejścia z klawiatury
+void processInput(GLFWwindow* window) {
+    float deltaTime = getDeltaTime();
+
+    if (cameraMode) {
+        // ruch kamery WSAD + SPACJA + SHIFT
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            camera.ProcessKeyboard(FORWARD, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            camera.ProcessKeyboard(BACKWARD, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            camera.ProcessKeyboard(LEFT, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            camera.ProcessKeyboard(RIGHT, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            camera.ProcessKeyboard(UPWARD, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+            camera.ProcessKeyboard(DOWNWARD, deltaTime);
+
+        // centrowanie na (0,0,0)
+        if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+            camera.CenterOn(glm::vec3(0.0f));
+        }
+    }
+
+    // blokada kursora myszy
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        cameraMode = false;
+    }
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        cameraMode = true;
+    }
 }
 
 // Funkcje generowania losowych liczb
@@ -219,6 +235,10 @@ int main() {
         return -1;
     }
 
+    // Ustawienia wejścia
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+
     // Włączenie głębi
 	glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -264,6 +284,7 @@ int main() {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Włącz obsługę klawiatury
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Włącz obsługę gamepada
+    io.WantCaptureMouse = true;
 
 	ImGui::StyleColorsDark(); // Ustaw ciemny motyw
 
@@ -271,7 +292,6 @@ int main() {
 	ImGui_ImplOpenGL3_Init("#version 330"); // Użyj wersji OpenGL 3.3
 
 	ImGui::GetIO().FontGlobalScale = 1.0f; // Ustaw skalę czcionki na 1.0f
-    // 
 
     // Our state
     bool show_demo_window = true;
@@ -284,11 +304,10 @@ int main() {
 
     // 🔁 Pętla renderująca
     while (!glfwWindowShouldClose(window)) {
+        float dt = getDeltaTime();
 
-        // Kamera
-		processInput(window);
-		glfwSetCursorPosCallback(window, mouse_callback);
-		glfwSetScrollCallback(window, scroll_callback);
+        processInput(window);
+        camera.Update(dt);
 
 		// Czyszczenie ekranu
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -299,17 +318,18 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+
         // GUI
         {
+            ImGui::Begin("Debug Panel");
 			ImGui::SliderFloat("Sun Scale", &sunScale, 0.1f, 10.0f);
 
 			// Ustawienia kamery
 			ImGui::Text("Camera Settings:");
 			ImGui::Checkbox("Enable Acceleration", &camera.enableAcceleration);
-			ImGui::SliderFloat("Acceleration", &camera.acceleration, 1.0f, 20.0f);
-			ImGui::SliderFloat("Max Speed", &camera.maxSpeed, 5.0f, 100.0f);
+			ImGui::SliderFloat("Acceleration", &camera.acceleration, 100.0f, 1000.0f);
+			ImGui::SliderFloat("Max Speed", &camera.maxSpeed, 100.0f, 2000.0f);
 			ImGui::SliderFloat("Mouse Sensitivity", &camera.MouseSensitivity, 0.01f, 1.0f);
-			ImGui::SliderFloat("Zoom (FOV)", &camera.Zoom, 1.0f, 90.0f);
 
 
             ImGui::Checkbox("Demo Window", &show_demo_window); // Przełącznik okna demo
@@ -318,12 +338,12 @@ int main() {
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edytor koloru
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+            ImGui::End();
         }
 
 		// Animacja
 
 		// Samo słońce i ziemia
-        float dt = getDeltaTime();
 
   //      sun.DrawSun(sunShader, renderer, camera);
   //      for (auto& planet : planets) {
