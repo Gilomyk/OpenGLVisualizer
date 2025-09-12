@@ -19,7 +19,7 @@ Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount,
         static_cast<unsigned int>(m_Sphere.GetIndices().size()),
         m_Layout,
         texture),
-    m_Translation(0.0f),
+    m_Position(0.0f),
     m_Scale(1.0f),
     m_Rotation(0.0f)
 {
@@ -32,8 +32,10 @@ Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount,
 	m_Parent = parent;
 
     if (enableOrbit && orbitRadius > 0.0f) {
+        m_Trail = std::make_unique<OrbitTrail>();
+
         m_Orbit = std::make_unique<Orbit>(orbitRadius, 100, glm::vec3(1.0f));
-		m_Orbit->SetPosition(m_Parent ? m_Parent->GetPosition() : glm::vec3(0.0f));
+		m_Orbit->SetPosition(glm::vec3(0.0f));
 		m_Orbit->SetRotation(m_OrbitTilt);
     }
 }
@@ -48,21 +50,29 @@ void Planet::Update(float dt) {
 	float rad = glm::radians(m_OrbitAngle);
 	glm::vec3 orbitPos(m_OrbitRadius * cos(rad), 0.0f, m_OrbitRadius * sin(rad));
 
-    glm::mat4 tilt = glm::yawPitchRoll(glm::radians(m_OrbitTilt.y),
+    glm::mat4 tilt = glm::yawPitchRoll(
+        glm::radians(m_OrbitTilt.y),
         glm::radians(m_OrbitTilt.x),
         glm::radians(m_OrbitTilt.z));
 
     glm::vec3 rotatedPos = glm::vec3(tilt * glm::vec4(orbitPos, 1.0));
 
-    m_Translation = m_Parent ? m_Parent->GetPosition() + rotatedPos : rotatedPos;
+    m_Position = m_Parent ? m_Parent->GetPosition() + rotatedPos : rotatedPos;
 	m_Rotation.y = m_SpinAngle; // Rotacja wokó³ osi Y
 
+    if (m_Trail) {
+        m_Trail->AddPoint(m_Position);
+    }
+
+    if (m_Orbit) {
+        m_Orbit->SetPosition(glm::vec3(0.0f));
+    }
 
 }
 
 void Planet::DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera) {
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, m_Translation);
+    model = glm::translate(model, m_Position);
     model = glm::scale(model, m_Scale);
     model *= glm::toMat4(glm::quat(glm::radians(m_Rotation)));
 
@@ -87,7 +97,7 @@ void Planet::DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera
 
 void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, m_Translation);
+    model = glm::translate(model, m_Position);
     model = glm::scale(model, m_Scale);
     model *= glm::toMat4(glm::quat(glm::radians(m_Rotation)));
 
@@ -99,4 +109,41 @@ void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
     shader.SetUniform3f("uEmissiveColor", 1.0f, 0.9f, 0.3f);
 
     renderer.Draw(m_Mesh, shader, GL_TRIANGLES);
+}
+
+void Planet::DebugPrint() const {
+    std::cout << "Planet:\n";
+    std::cout << "  Position: ("
+        << m_Position.x << ", "
+        << m_Position.y << ", "
+        << m_Position.z << ")\n";
+    std::cout << "  Orbit radius: " << m_OrbitRadius << "\n";
+    std::cout << "  Orbit tilt (planet): ("
+        << m_OrbitTilt.x << ", "
+        << m_OrbitTilt.y << ", "
+        << m_OrbitTilt.z << ")\n";
+    std::cout << "  Orbit angle: " << m_OrbitAngle << " deg\n";
+    std::cout << "  Spin angle: " << m_SpinAngle << " deg\n";
+
+    if (m_Parent) {
+        std::cout << "  Parent pos: ("
+            << m_Parent->GetPosition().x << ", "
+            << m_Parent->GetPosition().y << ", "
+            << m_Parent->GetPosition().z << ")\n";
+    }
+    else {
+        std::cout << "  Parent: none\n";
+    }
+
+    if (m_Orbit) {
+        std::cout << "  Orbit Center Pos: ("
+            << m_Orbit->GetPosition().x << ", "
+            << m_Orbit->GetPosition().y << ", "
+            << m_Orbit->GetPosition().z << ")\n";
+        std::cout << " Orbit tilt (orbit): ("
+            << m_Orbit->GetRotation().x << ", "
+            << m_Orbit->GetRotation().y << ", "
+            << m_Orbit->GetRotation().z << ")\n";
+    }
+    std::cout << "-----------------------------\n";
 }

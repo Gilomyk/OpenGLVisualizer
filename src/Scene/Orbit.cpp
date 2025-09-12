@@ -13,16 +13,16 @@ Orbit::Orbit(float radius, int segments, glm::vec3 orbitColor)
 		m_Orbit.GetIndices().data(),
 		static_cast<unsigned int>(m_Orbit.GetIndices().size()),
 		m_Layout),
-	m_Translation(0.0f),
+	m_Position(0.0f),
 	m_Scale(1.0f),
 	m_Rotation(0.0f, 0.0f, 0.0f)
 {   
 	m_OrbitColor = orbitColor;
 }
 
-void Orbit::DrawOrbit(Shader& shader, Renderer& renderer, const Camera& camera) {
+void Orbit::DrawOrbit(Shader& shader, Renderer& renderer, const Camera& camera, const glm::vec3& parentPos) {
 	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, m_Translation);
+	model = glm::translate(model, parentPos);
 	model = glm::scale(model, m_Scale);
 	model *= glm::toMat4(glm::quat(glm::radians(m_Rotation)));
 

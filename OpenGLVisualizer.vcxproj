@@ -144,6 +144,7 @@
     <ClCompile Include="src\GL\OrbitGen.cpp" />
     <ClCompile Include="src\GL\SphereGen.cpp" />
     <ClCompile Include="src\Scene\Orbit.cpp" />
+    <ClCompile Include="src\GL\OrbitTrail.cpp" />
     <ClCompile Include="src\Scene\Planet.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\glad.c" />
@@ -167,9 +168,9 @@
     <ClInclude Include="src\Core\Camera.h" />
     <ClInclude Include="src\GL\Mesh.h" />
     <ClInclude Include="src\GL\OrbitGen.h" />
-    <ClInclude Include="src\GL\OrbitMesh.h" />
     <ClInclude Include="src\GL\SphereGen.h" />
     <ClInclude Include="src\Scene\Orbit.h" />
+    <ClInclude Include="src\GL\OrbitTrail.h" />
     <ClInclude Include="src\Scene\Planet.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\IndexBuffer.h" />
@@ -483,6 +484,8 @@
     <None Include="shaders\orbit.vert" />
     <None Include="shaders\sphereFragment.frag" />
     <None Include="shaders\sphereVertex.vert" />
+    <None Include="shaders\trail.frag" />
+    <None Include="shaders\trail.vert" />
     <None Include="shaders\unlit_emissive.frag" />
     <None Include="shaders\unlit_emissive.vert" />
     <None Include="src\vendor\glm\detail\func_common.inl" />

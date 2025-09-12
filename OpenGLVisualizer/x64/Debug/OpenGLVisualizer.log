@@ -1,4 +1,9 @@
 ﻿  Application.cpp
-  Planet.cpp
-  Generowanie kodu...
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(61,59): warning C4267: "argument": konwersja z "size_t" do "_Ty", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(61,59): warning C4267:         with
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(61,59): warning C4267:         [
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(61,59): warning C4267:             _Ty=int
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(61,59): warning C4267:         ]
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(80,18): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
+LINK : warning LNK4098: domyślna biblioteka "MSVCRT" powoduje konflikt z innymi bibliotekami; użyj opcji /NODEFAULTLIB:biblioteka
   OpenGLVisualizer.vcxproj -> C:\Users\User\source\repos\OpenGLVisualizer\x64\Debug\OpenGLVisualizer.exe

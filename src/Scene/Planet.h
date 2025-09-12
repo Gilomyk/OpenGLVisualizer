@@ -6,6 +6,7 @@
 #include "../Renderer.h"
 #include "Orbit.h"
 #include "../Core/Camera.h"
+#include "../GL/OrbitTrail.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 
@@ -20,7 +21,7 @@ private:
     VertexBufferLayout m_Layout;
     Mesh m_Mesh;
 
-    glm::vec3 m_Translation;
+    glm::vec3 m_Position;
     glm::vec3 m_Scale;
     glm::vec3 m_Rotation; // w stopniach (Euler)
 
@@ -33,24 +34,28 @@ private:
 
     Planet* m_Parent;       // WskaŸnik na planetê-rodzica
 
+    std::unique_ptr<OrbitTrail> m_Trail;
 	std::unique_ptr<Orbit> m_Orbit;  // Unikalny wskaŸnik na obiekt orbity (jeœli istnieje)
 	glm::vec3 m_OrbitTilt; // Nachylenie orbity wzglêdem p³aszczyzny XY
 
 public:
     Planet(float radius, unsigned int sectorCount, unsigned int stackCount, float orbitRadius, glm::vec3 orbitTilt, float orbitSpeed, float spinSpeed, Planet* parent = nullptr, Texture* texture = nullptr, bool enableOrbit = false);
 
-    void SetPosition(const glm::vec3& pos) { m_Translation = pos; }
+    void SetPosition(const glm::vec3& pos) { m_Position = pos; }
     void SetScale(const glm::vec3& scale) { m_Scale = scale; }
     void SetRotation(const glm::vec3& rotation) { m_Rotation = rotation; }
 
-    glm::vec3& GetPosition() { return m_Translation; }
+    glm::vec3& GetPosition() { return m_Position; }
     glm::vec3& GetScale() { return m_Scale; }
     glm::vec3& GetRotation() { return m_Rotation; }
 
 	std::unique_ptr<Orbit>& GetOrbit() { return m_Orbit; }
+	Planet* GetParent() { return m_Parent; }
+	std::unique_ptr<OrbitTrail>& GetTrail() { return m_Trail; }
 
     void Update(float dt);  // Aktualizuje pozycjê i rotacjê
 
     void DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera);
     void DrawSun(Shader& shader, Renderer& renderer, const Camera& camera);
+	void DebugPrint() const;
 };

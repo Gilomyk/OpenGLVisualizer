@@ -84,6 +84,9 @@
     <ClCompile Include="src\GL\OrbitGen.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="src\GL\OrbitTrail.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader.h">
@@ -1019,10 +1022,10 @@
     <ClInclude Include="src\Scene\Orbit.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="src\GL\OrbitMesh.h">
+    <ClInclude Include="src\GL\OrbitGen.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="src\GL\OrbitGen.h">
+    <ClInclude Include="src\GL\OrbitTrail.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1450,6 +1453,8 @@
     <None Include="shaders\unlit_emissive.frag" />
     <None Include="shaders\orbit.vert" />
     <None Include="shaders\orbit.frag" />
+    <None Include="shaders\trail.frag" />
+    <None Include="shaders\trail.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\sun.png">

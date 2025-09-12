@@ -16,7 +16,7 @@ private:
     OrbitGen m_Orbit;
     VertexBufferLayout m_Layout;
     Mesh m_Mesh;
-    glm::vec3 m_Translation;
+    glm::vec3 m_Position;
     glm::vec3 m_Scale;
     glm::vec3 m_Rotation;
 	// w stopniach (Euler)
@@ -25,13 +25,13 @@ private:
 public:
     Orbit(float radius, int segments, glm::vec3 orbitColor);
 
-    void SetPosition(const glm::vec3& pos) { m_Translation = pos; }
+    void SetPosition(const glm::vec3& pos) { m_Position = pos; }
     void SetScale(const glm::vec3& scale) { m_Scale = scale; }
     void SetRotation(const glm::vec3& rotation) { m_Rotation = rotation; }
 
-    glm::vec3& GetPosition() { return m_Translation; }
+    glm::vec3& GetPosition() { return m_Position; }
     glm::vec3& GetScale() { return m_Scale; }
     glm::vec3& GetRotation() { return m_Rotation; }
 
-    void DrawOrbit(Shader& shader, Renderer& renderer, const Camera& camera);
+    void DrawOrbit(Shader& shader, Renderer& renderer, const Camera& camera, const glm::vec3& parentPos);
 };
