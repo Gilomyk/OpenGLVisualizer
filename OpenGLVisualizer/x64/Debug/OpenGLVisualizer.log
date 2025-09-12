@@ -1,9 +1,14 @@
 ﻿  Application.cpp
-C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(61,59): warning C4267: "argument": konwersja z "size_t" do "_Ty", możliwa utrata danych
-C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(61,59): warning C4267:         with
-C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(61,59): warning C4267:         [
-C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(61,59): warning C4267:             _Ty=int
-C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(61,59): warning C4267:         ]
-C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(80,18): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
-LINK : warning LNK4098: domyślna biblioteka "MSVCRT" powoduje konflikt z innymi bibliotekami; użyj opcji /NODEFAULTLIB:biblioteka
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(92,17): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(93,17): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(97,19): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(98,19): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(100,13): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(101,13): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(135,18): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
+  Camera.cpp
+  OrbitTrail.cpp
+  Orbit.cpp
+  Planet.cpp
+  Generowanie kodu...
   OpenGLVisualizer.vcxproj -> C:\Users\User\source\repos\OpenGLVisualizer\x64\Debug\OpenGLVisualizer.exe

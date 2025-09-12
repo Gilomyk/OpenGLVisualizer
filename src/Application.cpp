@@ -34,10 +34,11 @@
 #include "Scene/Planet.h"
 #include "Scene/Orbit.h"
 
-#define WIDTH 1080
-#define HEIGHT 720
+#define WIDTH 1920
+#define HEIGHT 1080
 
-
+// Ustawienia kamery
+Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
 // Callback do zmiany rozmiaru okna
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -52,16 +53,70 @@ float getDeltaTime() {
     return delta;
 }
 
+// funkcja do przetwarzania wejścia z klawiatury
+void processInput(GLFWwindow* window) {
+    float deltaTime = getDeltaTime();
+
+	// ruch kamery WSAD + SPACJA + SHIFT
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		camera.ProcessKeyboard(UPWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		camera.ProcessKeyboard(DOWNWARD, deltaTime);
+
+	// centrowanie na (0,0,0)
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+        camera.CenterOn(glm::vec3(0.0f));
+    }
+
+	// blokada kursora myszy
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    static float lastX = 400, lastY = 300;
+    static bool firstMouse = true;
+
+    if (firstMouse) {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // odwrócone, bo OpenGL ma odwrotny Y
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    camera.ProcessMouseScroll((float)yoffset);
+}
+
 // Funkcje generowania losowych liczb
 
 // dyskretna ze zbioru
-float getRandomFromSet(const std::vector<float>& values) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dist(0, values.size() - 1);
-
-    return values[dist(gen)];
-}
+//float getRandomFromSet(const std::vector<float>& values) {
+//    static std::random_device rd;
+//    static std::mt19937 gen(rd());
+//    std::uniform_int_distribution<> dist(0, values.size() - 1);
+//
+//    return values[dist(gen)];
+//}
 
 // dyskretna z przedziału
 float randf_step(float min, float max, float step) {
@@ -196,9 +251,6 @@ int main() {
 	// Generowanie układu słonecznego
 	auto planets = GenerateSystem(&sunTex, &earthTex);
 
-	// 📐 Ustawienia kamery
-    Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
-
 	// Shader i renderer
     Shader sunShader("shaders/unlit_emissive.vert", "shaders/unlit_emissive.frag");
     Shader planetShader("shaders/sphereVertex.vert", "shaders/sphereFragment.frag");
@@ -226,17 +278,18 @@ int main() {
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    // Zmienne obrotu kamery (najlepsze pod widok)
-    float camAlpha = 0.0f;   // kąt poziomy
-    float camBeta = 0.0f;   // kąt pionowy
-    float camR = 350.0f; // promień orbity
-
 	// Skalowanie XY
     static float earthScale = 1.0f;
 	static float sunScale = 1.0f;
 
     // 🔁 Pętla renderująca
     while (!glfwWindowShouldClose(window)) {
+
+        // Kamera
+		processInput(window);
+		glfwSetCursorPosCallback(window, mouse_callback);
+		glfwSetScrollCallback(window, scroll_callback);
+
 		// Czyszczenie ekranu
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -248,12 +301,16 @@ int main() {
 
         // GUI
         {
-            ImGui::SliderFloat("Earth Scale", &earthScale, 0.1f, 10.0f);
 			ImGui::SliderFloat("Sun Scale", &sunScale, 0.1f, 10.0f);
 
-			ImGui::SliderFloat("Camera Radius", &camR, 50.0f, 500.0f);
-			ImGui::SliderFloat("Camera Alpha", &camAlpha, 0.0f, 2.0f * 3.14159f);
-			ImGui::SliderFloat("Camera Beta", &camBeta, -1.5f, 1.5f);
+			// Ustawienia kamery
+			ImGui::Text("Camera Settings:");
+			ImGui::Checkbox("Enable Acceleration", &camera.enableAcceleration);
+			ImGui::SliderFloat("Acceleration", &camera.acceleration, 1.0f, 20.0f);
+			ImGui::SliderFloat("Max Speed", &camera.maxSpeed, 5.0f, 100.0f);
+			ImGui::SliderFloat("Mouse Sensitivity", &camera.MouseSensitivity, 0.01f, 1.0f);
+			ImGui::SliderFloat("Zoom (FOV)", &camera.Zoom, 1.0f, 90.0f);
+
 
             ImGui::Checkbox("Demo Window", &show_demo_window); // Przełącznik okna demo
             ImGui::Checkbox("Another Window", &show_another_window); // Przełącznik innego okna
@@ -306,22 +363,14 @@ int main() {
             //    planet->GetTrail()->Draw(trailShader, renderer, camera, true); // true = linia
         }
 		// Debug print co sekundę
-        static float debugTimer = 0.0f;
+        /*static float debugTimer = 0.0f;
         debugTimer += dt;
         if (debugTimer > 1.0f) {
             for (auto& planet : planets) {
                 planet->DebugPrint();
             }
             debugTimer = 0.0f;
-        }
-
-		// Aktualizacja pozycji kamery
-        float x = camR * cos(camBeta) * cos(camAlpha);
-        float y = camR * sin(camBeta);
-        float z = camR * cos(camBeta) * sin(camAlpha);
-
-        camera.SetPosition(glm::vec3(x, y, z));
-        camera.LookAt(glm::vec3(0.0f, 0.0f, 0.0f));
+        }*/
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

@@ -1,23 +1,48 @@
 #pragma once
+#include <glad/glad.h>
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
+// inspirowanie siê: https://learnopengl.com/Getting-started/Camera
+enum Camera_Movement {
+	FORWARD,
+	BACKWARD,
+	LEFT,
+	RIGHT,
+	UPWARD,
+	DOWNWARD
+};
+
 class Camera {
-private:
-	glm::vec3 position;
-	glm::vec3 target;
-	glm::vec3 up;
-
-	glm::mat4 viewMatrix;
-	glm::mat4 projectionMatrix;
-
 public:
+	// Parametry domyœlne
+	float Yaw = -90.0f;
+	float Pitch = 0.0f;
+	float MovementSpeed = 2.5f;
+	float MouseSensitivity = 0.1f;
+	float Zoom = 45.0f;
+
+	// Dane kamery
+	glm::vec3 Position;
+	glm::vec3 Front;
+	glm::vec3 Up;
+	glm::vec3 Right;
+	glm::vec3 WorldUp;
+
+	// Macierze
+	glm::mat4 Projection;
+
 	Camera(float fov, float aspectRatio, float nearPlane, float farPlane);
-
-	void SetPosition(const glm::vec3& position);
-	glm::vec3 GetPosition() const;
-	void LookAt(const glm::vec3& target);
-
 	glm::mat4 GetViewMatrix() const;
 	glm::mat4 GetProjectionMatrix() const;
+
+	void ProcessKeyboard(Camera_Movement direction, float deltaTime);
+	void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
+	void ProcessMouseScroll(float yoffset);
+
+	glm::vec3 GetPosition() const { return Position; }
+
+	void CenterOn(const glm::vec3& targetPos);
+private:
+	void updateCameraVectors();
 };

@@ -1,30 +1,90 @@
 #include "Camera.h"
+#include <iostream>
 
 Camera::Camera(float fov, float aspectRatio, float nearPlane, float farPlane)
-	: position(0.0f, 0.0f, 3.0f), target(0.0f, 0.0f, 0.0f), up(0.0f, 1.0f, 0.0f)
+	: Front(glm::vec3(0.0f, 0.0f, -1.0f)),
+	MovementSpeed(1000.0f),
+	MouseSensitivity(0.1f),
+	Zoom(fov),
+	Position(glm::vec3(0.0f, 0.0f, 300.0f)),
+	WorldUp(glm::vec3(0.0f, 1.0f, 0.0f))
 {
-	projectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
-	viewMatrix = glm::lookAt(position, target, up);
-}
-
-void Camera::SetPosition(const glm::vec3& pos) {
-	position = pos;
-	viewMatrix = glm::lookAt(position, target, up);
-}
-
-glm::vec3 Camera::GetPosition() const {
-	return position;
-}
-
-void Camera::LookAt(const glm::vec3& tgt) {
-	target = tgt;
-	viewMatrix = glm::lookAt(position, target, up);
+	Projection = glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
+	updateCameraVectors();
 }
 
 glm::mat4 Camera::GetViewMatrix() const {
-	return viewMatrix;
+	return glm::lookAt(Position, Position + Front, Up);
 }
 
 glm::mat4 Camera::GetProjectionMatrix() const {
-	return projectionMatrix;
+	return Projection;
+}
+
+void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime) {
+	float velocity = MovementSpeed * deltaTime;
+
+	if (direction == FORWARD)
+		//std::cout << "W pressed\n";
+		Position += Front * velocity;
+	if (direction == BACKWARD)
+		Position -= Front * velocity;
+	if (direction == LEFT)
+		Position -= Right * velocity;
+	if (direction == RIGHT)
+		Position += Right * velocity;
+	if (direction == UPWARD)
+		Position += Up * velocity;
+	if (direction == DOWNWARD)
+		Position -= Up * velocity;
+}
+
+void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch) {
+	xoffset *= MouseSensitivity;
+	yoffset *= MouseSensitivity;
+
+	Yaw += xoffset;
+	Pitch += yoffset;
+
+	if (constrainPitch) {
+		if (Pitch > 89.0f)
+			Pitch = 89.0f;
+		if (Pitch < -89.0f)
+			Pitch = -89.0f;
+	}
+	updateCameraVectors();
+}
+
+void Camera::ProcessMouseScroll(float yoffset) {
+	Zoom -= (float)yoffset;
+	if (Zoom < 1.0f)
+		Zoom = 1.0f;
+	if (Zoom > 45.0f)
+		Zoom = 45.0f;
+	Projection = glm::perspective(glm::radians(Zoom), Projection[1][1] / Projection[0][0], 0.1f, 1000.0f);
+}
+
+void Camera::CenterOn(const glm::vec3& targetPos) {
+
+	// Obliczamy front wzglêdem nowego celu
+	Front = glm::normalize(targetPos - Position);
+
+	// Od fronta i worldUp liczymy Right i Up
+	Right = glm::normalize(glm::cross(Front, WorldUp));
+	Up = glm::normalize(glm::cross(Right, Front));
+
+	Yaw = -90.0f;
+	Pitch = 0.0f;
+	Position = glm::vec3(0.0f, 0.0f, 300.0f);
+}
+
+
+void Camera::updateCameraVectors() {
+	glm::vec3 front;
+	front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+	front.y = sin(glm::radians(Pitch));
+	front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+	Front = glm::normalize(front);
+	Right = glm::normalize(glm::cross(Front, WorldUp));
+	Up = glm::normalize(glm::cross(Right, Front));
 }
