@@ -5,6 +5,7 @@ C:\Users\User\source\repos\OpenGLVisualizer\src\GL\SphereGen.cpp;C:\Users\User\s
 C:\Users\User\source\repos\OpenGLVisualizer\src\Scene\Orbit.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Orbit.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\GL\OrbitTrail.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\OrbitTrail.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\Scene\Planet.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Planet.obj
+C:\Users\User\source\repos\OpenGLVisualizer\src\Scene\Stars.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Stars.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\Shader.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\Shader.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\glad.c;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\glad.obj
 C:\Users\User\source\repos\OpenGLVisualizer\src\IndexBuffer.cpp;C:\Users\User\source\repos\OpenGLVisualizer\OpenGLVisualizer\x64\Debug\IndexBuffer.obj

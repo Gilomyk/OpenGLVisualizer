@@ -33,6 +33,7 @@
 #include "Core/Camera.h"
 #include "Scene/Planet.h"
 #include "Scene/Orbit.h"
+#include "Scene/Stars.h"
 
 #define WIDTH 1920
 #define HEIGHT 1080
@@ -174,6 +175,7 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTex, Texture* pl
         float radius = randf(15.0f, 40.0f);          // promień planety
         float orbitRadius = 80.0f + i * 60.0f + randf(-10, 10); // odległość od gwiazdy
         float orbitSpeed = randf(10.0f, 50.0f);      // prędkość kątowa
+        //float orbitSpeed = 0.0f; //dla testu czy orbita księżyca zależy od ziemskiej
         float spinSpeed = randf(-100.0f, 100.0f);   // prędkość rotacji własnej
         glm::vec3 orbitTilt(randf(-10, 10), randf(0, 360), randf(-5, 5)); // nachylenie orbity
 		//glm::vec3 orbitTilt(getRandomFromSet({0.0f, 11.5f, 23.2f, 34.5f}), 0.0f, 0.0f); // nachylenie orbity
@@ -271,11 +273,15 @@ int main() {
 	// Generowanie układu słonecznego
 	auto planets = GenerateSystem(&sunTex, &earthTex);
 
+    // Generowanie gwiazd
+    Stars stars(2000, 500.0f);
+
 	// Shader i renderer
     Shader sunShader("shaders/unlit_emissive.vert", "shaders/unlit_emissive.frag");
     Shader planetShader("shaders/sphereVertex.vert", "shaders/sphereFragment.frag");
 	Shader orbitShader("shaders/orbit.vert", "shaders/orbit.frag");
     Shader trailShader("shaders/trail.vert", "shaders/trail.frag");
+    Shader starShader("shaders/stars.vert", "shaders/stars.frag");
 	Renderer renderer;
 
     // Inicjalizacja GUI
@@ -382,6 +388,10 @@ int main() {
             //if (planet->GetTrail())
             //    planet->GetTrail()->Draw(trailShader, renderer, camera, true); // true = linia
         }
+        stars.Draw(starShader, camera);
+
+        // Gwiazdy
+        
 		// Debug print co sekundę
         /*static float debugTimer = 0.0f;
         debugTimer += dt;

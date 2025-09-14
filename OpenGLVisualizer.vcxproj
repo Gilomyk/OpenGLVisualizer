@@ -146,6 +146,7 @@
     <ClCompile Include="src\Scene\Orbit.cpp" />
     <ClCompile Include="src\GL\OrbitTrail.cpp" />
     <ClCompile Include="src\Scene\Planet.cpp" />
+    <ClCompile Include="src\Scene\Stars.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\IndexBuffer.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="src\Scene\Orbit.h" />
     <ClInclude Include="src\GL\OrbitTrail.h" />
     <ClInclude Include="src\Scene\Planet.h" />
+    <ClInclude Include="src\Scene\Stars.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\IndexBuffer.h" />
     <ClInclude Include="src\Renderer.h" />
@@ -484,6 +486,8 @@
     <None Include="shaders\orbit.vert" />
     <None Include="shaders\sphereFragment.frag" />
     <None Include="shaders\sphereVertex.vert" />
+    <None Include="shaders\stars.frag" />
+    <None Include="shaders\stars.vert" />
     <None Include="shaders\trail.frag" />
     <None Include="shaders\trail.vert" />
     <None Include="shaders\unlit_emissive.frag" />
