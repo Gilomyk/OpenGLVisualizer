@@ -4,6 +4,7 @@
 #include "../GL/SphereGen.h"
 #include "../Shader.h"
 #include "../Renderer.h"
+#include "../Material.h"
 #include "Orbit.h"
 #include "../Core/Camera.h"
 #include "../GL/OrbitTrail.h"
@@ -14,17 +15,6 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <memory>
-
-struct Material {
-    Texture* diffuse;   // mo¿e byæ nullptr
-    Texture* specular;  // mo¿e byæ nullptr
-    glm::vec3 color;    // fallback jeœli brak diffuse
-    float shininess;    // np. 32.0f
-
-    Material(Texture* diff = nullptr, Texture* spec = nullptr, glm::vec3 col = glm::vec3(1.0f), float sh = 32.0f)
-        : diffuse(diff), specular(spec), color(col), shininess(sh) {
-    }
-};
 
 class Planet {
 private:
@@ -37,24 +27,23 @@ private:
     glm::vec3 m_Rotation; // w stopniach (Euler)
 
     float m_OrbitRadius;    // Odleg³oœæ od rodzica
+    glm::vec3 m_OrbitTilt; // Nachylenie orbity wzglêdem p³aszczyzny XY
     float m_OrbitSpeed;     // Prêdkoœæ obrotu wokó³ rodzica
     float m_SpinSpeed;      // Prêdkoœæ obrotu w³asnego
     float m_OrbitAngle;     // Aktualny k¹t
     float m_SpinAngle;      // Aktualny k¹t rotacji w³asnej
-	float m_InitialAngle;  // K¹t pocz¹tkowy na orbicie
-
     Planet* m_Parent;       // WskaŸnik na planetê-rodzica
-    Material* m_Material;
 
     std::unique_ptr<OrbitTrail> m_Trail;
 	std::unique_ptr<Orbit> m_Orbit;  // Unikalny wskaŸnik na obiekt orbity (jeœli istnieje)
-	glm::vec3 m_OrbitTilt; // Nachylenie orbity wzglêdem p³aszczyzny XY
+
+    Material m_Material;
+    Texture* m_Texture = nullptr;
 
 public:
-    Planet(float radius, unsigned int sectorCount, 
-        unsigned int stackCount, float orbitRadius, 
-        glm::vec3 orbitTilt, float orbitSpeed, float spinSpeed, 
-        Planet* parent = nullptr, Material* material = nullptr, 
+    Planet(float radius, unsigned int sectorCount, unsigned int stackCount, 
+        float orbitRadius, glm::vec3 orbitTilt, float orbitSpeed, float spinSpeed, 
+        Planet* parent = nullptr,
         bool enableOrbit = false);
 
     void SetPosition(const glm::vec3& pos) { m_Position = pos; }
@@ -68,6 +57,9 @@ public:
 	std::unique_ptr<Orbit>& GetOrbit() { return m_Orbit; }
 	Planet* GetParent() { return m_Parent; }
 	std::unique_ptr<OrbitTrail>& GetTrail() { return m_Trail; }
+
+    void SetTexture(Texture* texture) { m_Texture = texture; }
+    void SetMaterial(Material& material) { m_Material = material; }
 
     void Update(float dt);  // Aktualizuje pozycjê i rotacjê
 

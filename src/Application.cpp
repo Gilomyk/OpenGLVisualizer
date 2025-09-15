@@ -34,6 +34,7 @@
 #include "Scene/Planet.h"
 #include "Scene/Orbit.h"
 #include "Scene/Stars.h"
+#include "MaterialGenerator.h"
 
 #define WIDTH 1920
 #define HEIGHT 1080
@@ -142,17 +143,17 @@ float randf(float min, float max, int decimals = 2) {
     return std::round(val * factor) / factor;
 }
 
-std::vector<std::unique_ptr<Planet>> GenerateSystem(Material* sunMaterial, Material* planetMaterial) {
+std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture) {
     std::vector<std::unique_ptr<Planet>> planets;
 
     // Centralna gwiazda
     auto sun = std::make_unique<Planet>(
         50.0f, 50, 50,     // rozmiar sfery
-        0.0f, glm::vec3(0.0f, 0.0f, 0.0f), 
-        0.0f, 0.0f,  // brak orbity, brak prędkości
-        nullptr, sunMaterial,
+        0.0f, glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f,  // brak orbity, brak prędkości
+        nullptr,
         false              // bez orbity
     );
+    sun->SetTexture(sunTexture);
 
 	planets.push_back(std::move(sun));
     Planet* sunPtr = planets.back().get();
@@ -164,20 +165,17 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Material* sunMaterial, Mater
         float radius = randf(15.0f, 40.0f);          // promień planety
         float orbitRadius = 80.0f + i * 60.0f + randf(-10, 10); // odległość od gwiazdy
         float orbitSpeed = randf(10.0f, 50.0f);      // prędkość kątowa
-        //float orbitSpeed = 0.0f; //dla testu czy orbita księżyca zależy od ziemskiej
         float spinSpeed = randf(-100.0f, 100.0f);   // prędkość rotacji własnej
         glm::vec3 orbitTilt(randf(-10, 10), randf(0, 360), randf(-5, 5)); // nachylenie orbity
-		//glm::vec3 orbitTilt(getRandomFromSet({0.0f, 11.5f, 23.2f, 34.5f}), 0.0f, 0.0f); // nachylenie orbity
+        Material planetMat = MaterialGenerator::RandomMaterial();
 
 		auto planet = std::make_unique<Planet>(
 			radius, 50, 50,
-			orbitRadius, orbitTilt,
-			orbitSpeed, spinSpeed,
-			sunPtr, planetMaterial,
+			orbitRadius, orbitTilt, orbitSpeed, spinSpeed,
+			sunPtr,
 			true
 		);
-
-        // push planet
+        planet->SetMaterial(planetMat);
         planets.push_back(std::move(planet));
         Planet* planetPtr = planets.back().get();
 
@@ -189,15 +187,15 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Material* sunMaterial, Mater
             float moonOrbitSpeed = randf(30.0f, 100.0f);   // prędkość kątowa
             float moonSpinSpeed = randf(-200.0f, 200.0f);  // prędkość rotacji własnej
             glm::vec3 moonOrbitTilt(randf(-20, 20), randf(0, 360), randf(-10, 10)); // nachylenie orbity
-            //glm::vec3 moonOrbitTilt(getRandomFromSet({ 0.0f, 14.9f, 5.3f, 24.7f }), 0.0f, 0.0f);
+            Material moonMat = MaterialGenerator::RandomMaterial();
 
 			auto moon = std::make_unique<Planet>(
 				moonRadius, 30, 30,
-				moonOrbitRadius, moonOrbitTilt,
-				moonOrbitSpeed, moonSpinSpeed,
-				planetPtr, planetMaterial,
+				moonOrbitRadius, moonOrbitTilt, moonOrbitSpeed, moonSpinSpeed, 
+                planetPtr,
 				true
 			);
+            moon->SetMaterial(moonMat);
 			planets.push_back(std::move(moon));
         }
     }
@@ -249,17 +247,8 @@ int main() {
     Texture sunDiffuse("res/textures/sun_diff.png");
     Texture sunSpecular("res/textures/sun_spec.png");
 
-    Material earthMat(&earthDiffuse, &earthSpecular, glm::vec3(1.0f), 64.0f);
-    Material sunMat(&sunDiffuse, &sunSpecular, glm::vec3(1.0f), 64.0f);
-    Material earthMatDiffuse(&earthDiffuse, nullptr, glm::vec3(1.0f), 64.0f);
-    Material sunMatDiffuse(&sunDiffuse, nullptr, glm::vec3(1.0f), 64.0f);
-    Material earthMatSpecular(nullptr, &earthSpecular, glm::vec3(1.0f), 64.0f);
-    Material sunMatSpecular(nullptr, &sunSpecular, glm::vec3(1.0f), 64.0f);
-
 	// Generowanie układu słonecznego
-	//auto planets = GenerateSystem(&sunMat, &earthMat);
-    //auto planets = GenerateSystem(&sunMatDiffuse, &earthMatDiffuse);
-    auto planets = GenerateSystem(&sunMatDiffuse, &earthMat);
+    auto planets = GenerateSystem(&sunDiffuse);
 
     // Generowanie gwiazd
     Stars stars(2000, 500.0f);
@@ -344,27 +333,6 @@ int main() {
         }
 
 		// Animacja
-
-		// Samo słońce i ziemia
-
-  //      sun.DrawSun(sunShader, renderer, camera);
-  //      for (auto& planet : planets) {
-  //          if (planet != &sun)
-  //              planet->DrawPlanet(planetShader, renderer, camera);
-  //          if (planet->GetOrbit())
-		//		planet->GetOrbit()->DrawOrbit(orbitShader, renderer, camera);
-  //      }
-
-  //      for (auto& planet : planets)
-  //          planet->Update(dt);
-
-		//// Skalowanie planet
-  //      glm::vec3 scale(earthScale, earthScale, earthScale);
-  //      glm::vec3 scaleB(sunScale, sunScale, sunScale);
-
-		//earth.SetScale(scale);
-  //      sun.SetScale(scaleB);
-
 		// Cały układ słoneczny
         for (auto& planet : planets) {
             planet->Update(dt);

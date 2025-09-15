@@ -143,6 +143,7 @@
     <ClCompile Include="src\GL\Mesh.cpp" />
     <ClCompile Include="src\GL\OrbitGen.cpp" />
     <ClCompile Include="src\GL\SphereGen.cpp" />
+    <ClCompile Include="src\MaterialGenerator.cpp" />
     <ClCompile Include="src\Scene\Orbit.cpp" />
     <ClCompile Include="src\GL\OrbitTrail.cpp" />
     <ClCompile Include="src\Scene\Planet.cpp" />
@@ -170,6 +171,8 @@
     <ClInclude Include="src\GL\Mesh.h" />
     <ClInclude Include="src\GL\OrbitGen.h" />
     <ClInclude Include="src\GL\SphereGen.h" />
+    <ClInclude Include="src\Material.h" />
+    <ClInclude Include="src\MaterialGenerator.h" />
     <ClInclude Include="src\Scene\Orbit.h" />
     <ClInclude Include="src\GL\OrbitTrail.h" />
     <ClInclude Include="src\Scene\Planet.h" />

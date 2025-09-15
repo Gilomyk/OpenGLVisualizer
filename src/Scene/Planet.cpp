@@ -4,7 +4,7 @@
 
 Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount, 
                float orbitRadius, glm::vec3 orbitTilt, float orbitSpeed, float spinSpeed,
-               Planet* parent, Material* material, bool enableOrbit)
+               Planet* parent, bool enableOrbit)
     : m_Sphere(radius, sectorCount, stackCount),
     m_Layout([] {
         VertexBufferLayout l;
@@ -17,8 +17,7 @@ Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount,
         static_cast<unsigned int>(m_Sphere.GetVertices().size()),
         m_Sphere.GetIndices().data(),
         static_cast<unsigned int>(m_Sphere.GetIndices().size()),
-        m_Layout,
-        material->diffuse),
+        m_Layout),
     m_Position(0.0f),
     m_Scale(1.0f),
     m_Rotation(0.0f)
@@ -30,7 +29,6 @@ Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount,
 	m_OrbitAngle = 0.0f;
 	m_SpinAngle = 0.0f;
 	m_Parent = parent;
-    m_Material = material;
 
     if (enableOrbit && orbitRadius > 0.0f) {
         m_Trail = std::make_unique<OrbitTrail>();
@@ -95,28 +93,18 @@ void Planet::DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera
     shader.SetUniform3fv("uViewPos", camera.GetPosition());
 
     // === MATERIAL ===
-    if (m_Material == nullptr) {
-        shader.SetUniform3fv("materialColor", glm::vec3(1.0f));
-        shader.SetUniform1f("uShininess", 32.0f);
+    if (m_Texture) {
+        // tryb z tekstur¹ (np. S³oñce)
+        m_Texture->Bind(0);
+        shader.SetUniform1i("uUseTexture", 1);
+        shader.SetUniform1i("uDiffuseMap", 0);
     }
     else {
-        if (m_Material->diffuse) {
-            m_Material->diffuse->Bind(0);
-            shader.SetUniform1i("hasDiffuse", 1);
-        }
-        else {
-            shader.SetUniform1i("hasDiffuse", 0);
-            shader.SetUniform3fv("materialColor", m_Material->color);
-        }
-
-        if (m_Material->specular) {
-            m_Material->specular->Bind(1);
-            shader.SetUniform1i("hasSpecular", 1);
-        }
-        else {
-            shader.SetUniform1i("hasSpecular", 0);
-        }
-        shader.SetUniform1f("uShininess", m_Material->shininess);
+        // tryb materia³owy (planety kolorowe)
+        shader.SetUniform1i("uUseTexture", 0);
+        shader.SetUniform3fv("uMaterial.diffuse", m_Material.diffuse);
+        shader.SetUniform3fv("uMaterial.specular", m_Material.specular);
+        shader.SetUniform1f("uMaterial.shininess", m_Material.shininess);
     }
 
     shader.SetUniform1f("uTime", (float)glfwGetTime());
@@ -138,9 +126,10 @@ void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
 
     shader.SetUniform3f("uEmissiveColor", 1.0f, 0.9f, 0.3f);
 
-    if (m_Material->diffuse) {
-        glActiveTexture(GL_TEXTURE0);
-        m_Material->diffuse->Bind();
+    if (m_Texture) {
+        // tryb z tekstur¹ (np. S³oñce)
+        m_Texture->Bind(0);
+        shader.SetUniform1i("uDiffuseMap", 0);
     }
 
     renderer.Draw(m_Mesh, shader, GL_TRIANGLES);
