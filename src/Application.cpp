@@ -55,7 +55,6 @@ float getDeltaTime() {
     lastTime = currentTime;
     if (delta < 0.01f) delta = 0.01f;
     if (delta > 0.033f) delta = 0.033f;
-	//std::cout << "Delta time: " << delta << " s\n";
     return delta;
 }
 
@@ -125,16 +124,6 @@ void processInput(GLFWwindow* window) {
 }
 
 // Funkcje generowania losowych liczb
-
-// dyskretna ze zbioru
-//float getRandomFromSet(const std::vector<float>& values) {
-//    static std::random_device rd;
-//    static std::mt19937 gen(rd());
-//    std::uniform_int_distribution<> dist(0, values.size() - 1);
-//
-//    return values[dist(gen)];
-//}
-
 // dyskretna z przedziału
 float randf_step(float min, float max, float step) {
     static std::mt19937 rng(std::random_device{}());
@@ -153,7 +142,7 @@ float randf(float min, float max, int decimals = 2) {
     return std::round(val * factor) / factor;
 }
 
-std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTex, Texture* planetTex) {
+std::vector<std::unique_ptr<Planet>> GenerateSystem(Material* sunMaterial, Material* planetMaterial) {
     std::vector<std::unique_ptr<Planet>> planets;
 
     // Centralna gwiazda
@@ -161,7 +150,7 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTex, Texture* pl
         50.0f, 50, 50,     // rozmiar sfery
         0.0f, glm::vec3(0.0f, 0.0f, 0.0f), 
         0.0f, 0.0f,  // brak orbity, brak prędkości
-        nullptr, sunTex,
+        nullptr, sunMaterial,
         false              // bez orbity
     );
 
@@ -184,7 +173,7 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTex, Texture* pl
 			radius, 50, 50,
 			orbitRadius, orbitTilt,
 			orbitSpeed, spinSpeed,
-			sunPtr, planetTex,
+			sunPtr, planetMaterial,
 			true
 		);
 
@@ -206,7 +195,7 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTex, Texture* pl
 				moonRadius, 30, 30,
 				moonOrbitRadius, moonOrbitTilt,
 				moonOrbitSpeed, moonSpinSpeed,
-				planetPtr, planetTex,
+				planetPtr, planetMaterial,
 				true
 			);
 			planets.push_back(std::move(moon));
@@ -253,25 +242,24 @@ int main() {
     GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // Ustawienie funkcji mieszania dla przezroczystości
     GLCall(glEnable(GL_BLEND)); // Włączenie mieszania kolorów
 
-	// Planety
-    Texture earthTex("res/textures/earth.png");
-	Texture sunTex("res/textures/sun.png");
+	// Planety - materiały
+    Texture earthDiffuse("res/textures/earth_diff.png");
+    Texture earthSpecular("res/textures/earth_spec.png");
 
-	// Same słońce i ziemia
- //   float r = 120.0f; // promień orbity
- //   float omega = 50.0f; // prędkość kątowa Ziemi wokół Słońca
- //   float omega2 = -200.0f; // prędkość kątowa Ziemi wokół własnej osi
-	//glm::vec3 tilt1(15.0f, 0.0f, 0.0f); // nachylenie orbity Ziemi
+    Texture sunDiffuse("res/textures/sun_diff.png");
+    Texture sunSpecular("res/textures/sun_spec.png");
 
-	//Planet sun(50.0f, 50, 50, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f, nullptr, &sunTex);
- //   Planet earth(30.0f, 50, 50, r, tilt1, omega, omega2, &sun, &earthTex, true);
-
- //   std::vector<Planet*> planets;
- //   planets.push_back(&sun);
- //   planets.push_back(&earth);
+    Material earthMat(&earthDiffuse, &earthSpecular, glm::vec3(1.0f), 64.0f);
+    Material sunMat(&sunDiffuse, &sunSpecular, glm::vec3(1.0f), 64.0f);
+    Material earthMatDiffuse(&earthDiffuse, nullptr, glm::vec3(1.0f), 64.0f);
+    Material sunMatDiffuse(&sunDiffuse, nullptr, glm::vec3(1.0f), 64.0f);
+    Material earthMatSpecular(nullptr, &earthSpecular, glm::vec3(1.0f), 64.0f);
+    Material sunMatSpecular(nullptr, &sunSpecular, glm::vec3(1.0f), 64.0f);
 
 	// Generowanie układu słonecznego
-	auto planets = GenerateSystem(&sunTex, &earthTex);
+	//auto planets = GenerateSystem(&sunMat, &earthMat);
+    //auto planets = GenerateSystem(&sunMatDiffuse, &earthMatDiffuse);
+    auto planets = GenerateSystem(&sunMatDiffuse, &earthMat);
 
     // Generowanie gwiazd
     Stars stars(2000, 500.0f);
@@ -283,6 +271,14 @@ int main() {
     Shader trailShader("shaders/trail.vert", "shaders/trail.frag");
     Shader starShader("shaders/stars.vert", "shaders/stars.frag");
 	Renderer renderer;
+
+    // Inicjalizacja shaderów
+    planetShader.Bind();
+    planetShader.SetUniform1i("uDiffuseMap", 0);
+    planetShader.SetUniform1i("uSpecularMap", 1);
+
+    sunShader.Bind();
+    sunShader.SetUniform1i("uDiffuseMap", 0);
 
     // Inicjalizacja GUI
     IMGUI_CHECKVERSION();

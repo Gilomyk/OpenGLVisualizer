@@ -1468,5 +1468,11 @@
     <Image Include="..\..\..\Downloads\sun.png">
       <Filter>Pliki zasobów</Filter>
     </Image>
+    <Image Include="..\..\..\Downloads\sun_spec.png">
+      <Filter>Pliki zasobów</Filter>
+    </Image>
+    <Image Include="..\..\..\Downloads\earth_spec.png">
+      <Filter>Pliki zasobów</Filter>
+    </Image>
   </ItemGroup>
 </Project>

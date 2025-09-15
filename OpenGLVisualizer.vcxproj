@@ -633,7 +633,9 @@
     <None Include="src\vendor\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\..\..\Downloads\earth_spec.png" />
     <Image Include="..\..\..\Downloads\sun.png" />
+    <Image Include="..\..\..\Downloads\sun_spec.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

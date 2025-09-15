@@ -30,7 +30,6 @@ void Stars::Draw(Shader& shader, const Camera& camera) {
 	shader.SetUniformMat4f("uProjection", camera.GetProjectionMatrix());
 
 	shader.SetUniform1f("uTime", (float)glfwGetTime());
-	std::cout << "uTime = " << (float)glfwGetTime() << std::endl;
 
 	glDrawArrays(GL_POINTS, 0, m_Count);
 }

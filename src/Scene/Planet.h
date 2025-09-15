@@ -15,6 +15,17 @@
 #include <glm/gtx/quaternion.hpp>
 #include <memory>
 
+struct Material {
+    Texture* diffuse;   // mo¿e byæ nullptr
+    Texture* specular;  // mo¿e byæ nullptr
+    glm::vec3 color;    // fallback jeœli brak diffuse
+    float shininess;    // np. 32.0f
+
+    Material(Texture* diff = nullptr, Texture* spec = nullptr, glm::vec3 col = glm::vec3(1.0f), float sh = 32.0f)
+        : diffuse(diff), specular(spec), color(col), shininess(sh) {
+    }
+};
+
 class Planet {
 private:
     SphereGen m_Sphere;
@@ -33,13 +44,18 @@ private:
 	float m_InitialAngle;  // K¹t pocz¹tkowy na orbicie
 
     Planet* m_Parent;       // WskaŸnik na planetê-rodzica
+    Material* m_Material;
 
     std::unique_ptr<OrbitTrail> m_Trail;
 	std::unique_ptr<Orbit> m_Orbit;  // Unikalny wskaŸnik na obiekt orbity (jeœli istnieje)
 	glm::vec3 m_OrbitTilt; // Nachylenie orbity wzglêdem p³aszczyzny XY
 
 public:
-    Planet(float radius, unsigned int sectorCount, unsigned int stackCount, float orbitRadius, glm::vec3 orbitTilt, float orbitSpeed, float spinSpeed, Planet* parent = nullptr, Texture* texture = nullptr, bool enableOrbit = false);
+    Planet(float radius, unsigned int sectorCount, 
+        unsigned int stackCount, float orbitRadius, 
+        glm::vec3 orbitTilt, float orbitSpeed, float spinSpeed, 
+        Planet* parent = nullptr, Material* material = nullptr, 
+        bool enableOrbit = false);
 
     void SetPosition(const glm::vec3& pos) { m_Position = pos; }
     void SetScale(const glm::vec3& scale) { m_Scale = scale; }

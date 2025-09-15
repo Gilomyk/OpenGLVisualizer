@@ -27,10 +27,6 @@ void Renderer::Clear() const {
 }
 
 void Renderer::Draw(const Mesh& mesh, const Shader& shader, GLenum primitiveType) const {
-	if (mesh.GetTexture()) {
-		mesh.GetTexture()->Bind();
-		shader.SetUniform1i("uTexture", 0);
-	}
 	mesh.Bind();
 	GLCall(glDrawElements(primitiveType, mesh.GetIndexCount(), GL_UNSIGNED_INT, nullptr));
 }

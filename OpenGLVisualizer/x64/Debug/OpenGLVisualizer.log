@@ -1,3 +1,9 @@
-﻿  Stars.cpp
-C:\Users\User\source\repos\OpenGLVisualizer\src\Scene\Stars.cpp(19,62): warning C4267: "argument": konwersja z "size_t" do "unsigned int", możliwa utrata danych
+﻿  Application.cpp
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(69,17): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(70,17): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(74,19): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(75,19): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(77,13): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(78,13): warning C4244: "=": konwersja z "double" do "float", możliwa utrata danych
+C:\Users\User\source\repos\OpenGLVisualizer\src\Application.cpp(141,18): warning C4244: "inicjowanie": konwersja z "double" do "float", możliwa utrata danych
   OpenGLVisualizer.vcxproj -> C:\Users\User\source\repos\OpenGLVisualizer\x64\Debug\OpenGLVisualizer.exe

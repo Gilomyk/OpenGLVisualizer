@@ -3,7 +3,12 @@ in vec3 vPosWorld; // Position passed from the vertex shader
 in vec3 vNormal; // Normal vector passed from the vertex shader
 in vec2 vUV; // Texture coordinates passed from the vertex shader
 
-uniform sampler2D uTexture;
+uniform sampler2D uDiffuseMap;
+uniform sampler2D uSpecularMap;
+uniform bool hasDiffuse;
+uniform bool hasSpecular;
+uniform vec3 materialColor;   // fallback, gdy brak diffuse
+uniform float uShininess;
 
 uniform vec3 uLightAmbient;
 uniform vec3 uLightPos;
@@ -11,34 +16,51 @@ uniform vec3 uLightDiffuse;
 
 uniform vec3 uViewPos; // Camera position
 uniform vec3 uLightSpecular; // Specular light color
-uniform float uShininess; // Shininess factor for specular highlight
 
 out vec4 FragColor;
 
+// simple hash noise
+float hashNoise(vec2 p) {
+    return fract(sin(dot(p ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+
 void main()
 {
-    // Texture color
-    vec3 texColor = vec3(texture(uTexture, vUV));
+    // === Base color (diffuse source) ===
+    vec3 baseColor;
+    if (hasDiffuse) {
+        baseColor = texture(uDiffuseMap, vUV).rgb;
+    } else {
+        baseColor = materialColor;
+    }
 
-    // Ambient component
-    vec3 ambient = uLightAmbient * texColor;
+    // add simple noise modulation
+    float n = hashNoise(vUV * 50.0);
+    baseColor *= (0.85 + 0.15 * n);
 
-    // Diffuse component
+    // === Lighting ===
+    // Ambient
+    vec3 ambient = uLightAmbient * baseColor;
+
+    // Diffuse
     vec3 lightDir = normalize(uLightPos - vPosWorld);
     float diff = max(dot(vNormal, lightDir), 0.0);
-    vec3 diffuse = diff * uLightDiffuse * texColor;
+    vec3 diffuse = diff * uLightDiffuse * baseColor;
 
-    // Specular component
+    // Specular
     vec3 viewDir = normalize(uViewPos - vPosWorld);
     vec3 reflectDir = reflect(-lightDir, vNormal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), uShininess);
-    vec3 specular = spec * uLightSpecular * texColor;
 
-    // Combine all components
+    float specStrength = 1.0;
+    if (hasSpecular) {
+        specStrength = texture(uSpecularMap, vUV).r;
+    }
+
+    vec3 specular = specStrength * spec * uLightSpecular;
+
+    // Final
     vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, 1.0);
-
-    // Test with no lightning
-//    vec4 texColor = texture(uTexture, vUV);
-//    FragColor = texColor;
 }
