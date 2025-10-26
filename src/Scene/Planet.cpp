@@ -124,7 +124,10 @@ void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
     shader.SetUniformMat4f("uView", camera.GetViewMatrix());
     shader.SetUniformMat4f("uProjection", camera.GetProjectionMatrix());
 
-    shader.SetUniform3f("uEmissiveColor", 1.0f, 0.9f, 0.3f);
+    shader.SetUniform1f("uTime", glfwGetTime());
+    shader.SetUniform3f("uBaseColor", 0.7f, 0.6f, 0.7f);
+    shader.SetUniform1f("uFlickerStrength", 0.2f);
+    shader.SetUniform1f("uGradientFalloff", 1.5f);
 
     if (m_Texture) {
         // tryb z tekstur¹ (np. S³oñce)
