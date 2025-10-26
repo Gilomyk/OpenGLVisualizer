@@ -45,24 +45,42 @@ public:
         float orbitRadius, glm::vec3 orbitTilt, float orbitSpeed, float spinSpeed, 
         Planet* parent = nullptr,
         bool enableOrbit = false);
-
+    
+	// Settery
     void SetPosition(const glm::vec3& pos) { m_Position = pos; }
     void SetScale(const glm::vec3& scale) { m_Scale = scale; }
     void SetRotation(const glm::vec3& rotation) { m_Rotation = rotation; }
 
-    glm::vec3& GetPosition() { return m_Position; }
-    glm::vec3& GetScale() { return m_Scale; }
-    glm::vec3& GetRotation() { return m_Rotation; }
-
-	std::unique_ptr<Orbit>& GetOrbit() { return m_Orbit; }
-	Planet* GetParent() { return m_Parent; }
-	std::unique_ptr<OrbitTrail>& GetTrail() { return m_Trail; }
+	void SetOrbitRadius(float radius) { m_OrbitRadius = radius; }
+    void SetOrbitTilt(const glm::vec3& tilt) { m_OrbitTilt = tilt; }
+	void SetOrbitSpeed(float speed) { m_OrbitSpeed = speed; }
+	void SetSpinSpeed(float speed) { m_SpinSpeed = speed; }
+	void SetOrbitAngle(float angle) { m_OrbitAngle = angle; }
+	void SetSpinAngle(float angle) { m_SpinAngle = angle; }
 
     void SetTexture(Texture* texture) { m_Texture = texture; }
     void SetMaterial(Material& material) { m_Material = material; }
 
+	// Gettery
+    glm::vec3& GetPosition() { return m_Position; }
+    glm::vec3& GetScale() { return m_Scale; }
+    glm::vec3& GetRotation() { return m_Rotation; }
+
+	float GetOrbitRadius() const { return m_OrbitRadius; }
+	glm::vec3 GetOrbitTilt() const { return m_OrbitTilt; }
+	float GetOrbitSpeed() const { return m_OrbitSpeed; }
+	float GetSpinSpeed() const { return m_SpinSpeed; }
+	float GetOrbitAngle() const { return m_OrbitAngle; }
+	float GetSpinAngle() const { return m_SpinAngle; }
+
+    Planet* GetParent() { return m_Parent; }
+    std::unique_ptr<OrbitTrail>& GetTrail() { return m_Trail; }
+	std::unique_ptr<Orbit>& GetOrbit() { return m_Orbit; }
+
+	// Aktualizacja
     void Update(float dt);  // Aktualizuje pozycjê i rotacjê
 
+	// Rysowanie
     void DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera);
     void DrawSun(Shader& shader, Renderer& renderer, const Camera& camera);
 	void DebugPrint() const;

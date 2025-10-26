@@ -145,7 +145,7 @@ float randf(float min, float max, int decimals = 2) {
     return std::round(val * factor) / factor;
 }
 
-std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture) {
+std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture, const AudioFrame& frame) {
     std::vector<std::unique_ptr<Planet>> planets;
 
     // Centralna gwiazda
@@ -156,51 +156,42 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture) {
         false              // bez orbity
     );
     sun->SetTexture(sunTexture);
-
 	planets.push_back(std::move(sun));
     Planet* sunPtr = planets.back().get();
 
     // Liczba planet 2–5
     int numPlanets = (int)randf(2, 5);
 
-    for (int i = 0; i < numPlanets; i++) {
-        float radius = randf(15.0f, 40.0f);          // promień planety
-        float orbitRadius = 80.0f + i * 60.0f + randf(-10, 10); // odległość od gwiazdy
-        float orbitSpeed = randf(10.0f, 50.0f);      // prędkość kątowa
-        float spinSpeed = randf(-100.0f, 100.0f);   // prędkość rotacji własnej
-        glm::vec3 orbitTilt(randf(-10, 10), randf(0, 360), randf(-5, 5)); // nachylenie orbity
-        Material planetMat = MaterialGenerator::RandomMaterial();
+    std::vector<std::pair<std::string, float>> bands = {
+        {"sub_bass", frame.bands.sub_bass},
+        {"bass", frame.bands.bass},
+        {"low_mid", frame.bands.low_mid},
+        {"mid", frame.bands.mid},
+        {"high_mid", frame.bands.high_mid},
+        {"presence", frame.bands.presence},
+        {"brilliance", frame.bands.brilliance},
+        {"air", frame.bands.air}
+    };
 
-		auto planet = std::make_unique<Planet>(
-			radius, 50, 50,
-			orbitRadius, orbitTilt, orbitSpeed, spinSpeed,
-			sunPtr,
-			true
-		);
-        planet->SetMaterial(planetMat);
+    float baseOrbit = 80.0f;
+    for (size_t i = 0; i < bands.size(); ++i) {
+        float amplitude = bands[i].second; 
+
+        // Rozmiar i odległość zależne od pasma
+        float radius = 10.0f + amplitude * 0.002f;
+        float orbitRadius = baseOrbit + i * 50.0f + amplitude * 0.001f;
+        float orbitSpeed = 10.0f + 40.0f * (1.0f - (float)i / bands.size());
+        float spinSpeed = randf(-100.0f, 100.0f);
+        glm::vec3 tilt(randf(-10, 10), randf(0, 360), randf(-5, 5));
+        Material material = MaterialGenerator::RandomMaterial();
+
+        auto planet = std::make_unique<Planet>(
+            radius, 50, 50, orbitRadius, tilt, orbitSpeed, spinSpeed, sunPtr, true
+        );
+        planet->SetMaterial(material);
         planets.push_back(std::move(planet));
-        Planet* planetPtr = planets.back().get();
-
-		// Liczba księżyców 0–3
-		int numMoons = (int)randf(0, 3);
-        for (int j = 0; j < numMoons; j++) {
-            float moonRadius = radius * randf(0.1f, 0.3f); // promień księżyca
-            float moonOrbitRadius = radius + 20.0f + j * 15.0f + randf(-5, 5); // odległość od planety
-            float moonOrbitSpeed = randf(30.0f, 100.0f);   // prędkość kątowa
-            float moonSpinSpeed = randf(-200.0f, 200.0f);  // prędkość rotacji własnej
-            glm::vec3 moonOrbitTilt(randf(-20, 20), randf(0, 360), randf(-10, 10)); // nachylenie orbity
-            Material moonMat = MaterialGenerator::RandomMaterial();
-
-			auto moon = std::make_unique<Planet>(
-				moonRadius, 30, 30,
-				moonOrbitRadius, moonOrbitTilt, moonOrbitSpeed, moonSpinSpeed, 
-                planetPtr,
-				true
-			);
-            moon->SetMaterial(moonMat);
-			planets.push_back(std::move(moon));
-        }
     }
+
 	return planets;
 }
 
@@ -242,6 +233,12 @@ int main() {
     GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // Ustawienie funkcji mieszania dla przezroczystości
     GLCall(glEnable(GL_BLEND)); // Włączenie mieszania kolorów
 
+
+    // Ładowanie parametrów audio
+    AudioMapper audio;
+    audio.LoadFromJSON("data/analysis_full.json");
+	AudioFrame currentFrame = audio.GetFrame(0);
+
 	// Planety - materiały
     Texture earthDiffuse("res/textures/earth_diff.png");
     Texture earthSpecular("res/textures/earth_spec.png");
@@ -250,7 +247,7 @@ int main() {
     Texture sunSpecular("res/textures/sun_spec.png");
 
 	// Generowanie układu słonecznego
-    auto planets = GenerateSystem(&sunDiffuse);
+    auto planets = GenerateSystem(&sunDiffuse, currentFrame);
 
     // Generowanie gwiazd
     Stars stars(2000, 500.0f);
@@ -270,10 +267,6 @@ int main() {
 
     sunShader.Bind();
     sunShader.SetUniform1i("uDiffuseMap", 0);
-
-    // Ładowanie parametrów audio
-    AudioMapper audio;
-    audio.LoadFromJSON("data/analysis_full.json");
 
 	// Panel kontrolny GUI dla audio
     GUIControlPanel audioGUI;
@@ -345,6 +338,30 @@ int main() {
 
             audioGUI.DrawImGUI();
         }
+
+		// Test parametrów za pomocą GUI
+
+        std::vector<std::pair<std::string, float>> newBands = {
+            {"sub_bass", audioGUI.bands.sub_bass},
+            {"bass", audioGUI.bands.bass},
+            {"low_mid", audioGUI.bands.low_mid},
+            {"mid", audioGUI.bands.mid},
+            {"high_mid", audioGUI.bands.high_mid},
+            {"presence", audioGUI.bands.presence},
+            {"brilliance", audioGUI.bands.brilliance},
+            {"air", audioGUI.bands.air}
+        };
+
+        for (size_t i = 1; i < planets.size(); ++i) {
+            float newAmplitude = newBands[i-1].second;
+
+            // Rozmiar i odległość zależne od pasma
+            float scale = 1.0f + newAmplitude * 0.001f;
+            float orbitRadius = 80.0f + i * 50.0f + newAmplitude * 0.002f;
+
+			planets[i]->SetScale(glm::vec3(scale));
+			planets[i]->SetOrbitRadius(orbitRadius);
+		}
 
 		// Animacja
 		// Cały układ słoneczny
