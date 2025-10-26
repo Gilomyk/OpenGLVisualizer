@@ -4,6 +4,16 @@
 #include <glm/glm.hpp>
 #include <json/json.hpp>
 
+enum class AudioVisualParam {
+    SUN_EMISSION,
+    PLANET_SCALE,
+    PLANET_ROTATION,
+    PLANET_COLOR,
+    ORBIT_RADIUS,
+    SCENE_SATURATION
+};
+
+
 // Struktura pasm audio
 struct AudioBands {
     float sub_bass = 0.0f;
@@ -14,6 +24,25 @@ struct AudioBands {
     float presence = 0.0f;
     float brilliance = 0.0f;
     float air = 0.0f;
+};
+
+struct AudioBandsMaxMin {
+	float sub_bass_min = 0.0f;
+	float sub_bass_max = 1.0f;
+	float bass_min = 0.0f;
+	float bass_max = 1.0f;
+	float low_mid_min = 0.0f;
+	float low_mid_max = 1.0f;
+	float mid_min = 0.0f;
+	float mid_max = 1.0f;
+	float high_mid_min = 0.0f;
+	float high_mid_max = 1.0f;
+	float presence_min = 0.0f;
+	float presence_max = 1.0f;
+	float brilliance_min = 0.0f;
+	float brilliance_max = 1.0f;
+	float air_min = 0.0f;
+	float air_max = 1.0f;
 };
 
 
@@ -70,14 +99,20 @@ public:
     // Zwraca sta³¹ referencjê (do przegl¹dania)
     const std::vector<AudioFrame>& GetFrames() const { return m_Frames; }
 
+    float MapValue(AudioVisualParam param, int frameIndex) const;
+
     // --- Mapowania ---
     glm::vec3 MapColor(int frameIndex) const;
     float MapEmission(int frameIndex) const;
     float MapOrbitRadius(int frameIndex) const;
     float MapRotationSpeed(int frameIndex) const;
 
+    void SetBandStats(const AudioBandsMaxMin& stats) { m_BandStats = stats; }
+    AudioFrame GetSmoothedFrame(int frameIndex);
+
 private:
     std::vector<AudioFrame> m_Frames;
+	AudioBandsMaxMin m_BandStats;
 
     // --- Normalizacje ---
     float NormalizeRMS(float value) const;
@@ -89,4 +124,10 @@ private:
     float NormalizeContrast(float value) const;
     float NormalizeChroma(float value) const;
     float NormalizeMFCC(float value) const;
+	float NormalizeBand(float value, float minVal, float maxVal) const;
+
+	// --- Wyg³adzanie ---
+
+    AudioBands m_SmoothedBands;
+    float m_SmoothAlpha = 0.2f;
 };

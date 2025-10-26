@@ -52,6 +52,7 @@ Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1500.0f);
 bool cameraMode = false;
 
 bool testGUIMode = false;
+bool enableOrbit = false;
 float startTime = 0.0f;
 float renderTime = 0.0f;
 
@@ -196,7 +197,7 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture, const A
         Material material = MaterialGenerator::RandomMaterial();
 
         auto planet = std::make_unique<Planet>(
-            radius, 50, 50, orbitRadius, tilt, orbitSpeed, spinSpeed, sunPtr, true
+            radius, 50, 50, orbitRadius, tilt, orbitSpeed, spinSpeed, sunPtr, enableOrbit
         );
         planet->SetMaterial(material);
         planets.push_back(std::move(planet));
@@ -246,7 +247,7 @@ int main() {
 
     // Ładowanie parametrów audio
     AudioMapper audio;
-    audio.LoadFromJSON("data/analysis_full.json");
+    audio.LoadFromJSON("data/analysis_with_stats.json");
 	AudioFrame currentFrame = audio.GetFrame(0);
 
 	// Planety - materiały
@@ -308,8 +309,14 @@ int main() {
 	// Indeks klatki audio
     static int frameIndex = 0;
 
+	// Parametry regulowane przez GUI
+    float scaleSensitivity = 1.0f;
+
 	// Odtwarzanie dźwięku (opcjonalne)
     PlaySound(TEXT("res/audio/slowa.wav"), NULL, SND_FILENAME | SND_ASYNC);
+
+    //mciSendString(L"open \"res/audio/Tchaikovsky-Waltz-of-the-Flowers.mp3\" type mpegvideo alias music", NULL, 0, NULL);
+    //mciSendString(L"play music", NULL, 0, NULL);
 
     // 🔁 Pętla renderująca
     while (!glfwWindowShouldClose(window)) {
@@ -363,6 +370,12 @@ int main() {
 
 			if (testGUIMode)
                 audioGUI.DrawImGUI();
+            else {
+                ImGui::Begin("Parameter control");
+                ImGui::SliderFloat("Scale Sensitivity", &scaleSensitivity, 0.0f, 20.0f);
+				ImGui::End();
+            }
+
         }
 
 		// Test parametrów za pomocą GUI
@@ -381,8 +394,10 @@ int main() {
 			frameIndex = (int)(renderTime * AUDIO_FRAMERATE);
 			if (frameIndex >= audio.GetFrameCount())
 				frameIndex = 0;
-			currentFrame = audio.GetFrame(frameIndex);
+			//currentFrame = audio.GetFrame(frameIndex);
+            currentFrame = audio.GetSmoothedFrame(frameIndex);
 		}
+
         std::vector<std::pair<std::string, float>> newBands = {
             {"sub_bass", currentFrame.bands.sub_bass},
             {"bass", currentFrame.bands.bass},
@@ -398,8 +413,8 @@ int main() {
             float newAmplitude = newBands[i-1].second;
 
             // Rozmiar i odległość zależne od pasma
-            float scale = 1.0f + newAmplitude * 0.0002f;
-            float orbitRadius = 80.0f + i * 50.0f + newAmplitude * 0.002f;
+            float scale = 1.0f + newAmplitude * scaleSensitivity;
+            float orbitRadius = 80.0f + i * 50.0f + newAmplitude * (scaleSensitivity * 10.0f);
 
 			planets[i]->SetScale(glm::vec3(scale));
 			planets[i]->SetOrbitRadius(orbitRadius);
