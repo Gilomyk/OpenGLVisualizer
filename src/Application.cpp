@@ -35,6 +35,8 @@
 #include "Scene/Orbit.h"
 #include "Scene/Stars.h"
 #include "MaterialGenerator.h"
+#include "Audio/AudioMapper.h"
+#include "Audio/GUIControlPanel.h"
 
 #define WIDTH 1920
 #define HEIGHT 1080
@@ -269,6 +271,13 @@ int main() {
     sunShader.Bind();
     sunShader.SetUniform1i("uDiffuseMap", 0);
 
+    // Ładowanie parametrów audio
+    AudioMapper audio;
+    audio.LoadFromJSON("data/analysis_full.json");
+
+	// Panel kontrolny GUI dla audio
+    GUIControlPanel audioGUI;
+
     // Inicjalizacja GUI
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -292,6 +301,9 @@ int main() {
 	// Skalowanie XY
     static float earthScale = 1.0f;
 	static float sunScale = 1.0f;
+
+	// Indeks klatki audio
+    static int frameIndex = 0;
 
     // 🔁 Pętla renderująca
     while (!glfwWindowShouldClose(window)) {
@@ -330,6 +342,8 @@ int main() {
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
+
+            audioGUI.DrawImGUI();
         }
 
 		// Animacja
