@@ -15,7 +15,7 @@ void GUIControlPanel::DrawImGUI()
     if (ImGui::BeginTabBar("AudioTabs")) {
 
         if (ImGui::BeginTabItem("General")) {
-            ImGui::SliderFloat("RMS", &rms, 0.0f, 0.3f);
+            ImGui::SliderFloat("RMS", &rms, 0.0f, 1.0f);
             ImGui::SliderFloat("Spectral Centroid", &spectral_centroid, 1000.0f, 11000.0f);
             ImGui::SliderFloat("Spectral Bandwidth", &spectral_bandwidth, 1300.0f, 6500.0f);
             ImGui::SliderFloat("Spectral Rolloff", &spectral_rolloff, 1500.0f, 19000.0f);
@@ -29,14 +29,14 @@ void GUIControlPanel::DrawImGUI()
         if (ImGui::BeginTabItem("Bands")) {
             ImGui::Text("Frequency Bands (Hz)");
             ImGui::Separator();
-            ImGui::SliderFloat("Sub Bass", &bands.sub_bass, 0.0f, 10000.0f);
-            ImGui::SliderFloat("Bass", &bands.bass, 0.0f, 70000.0f);
-            ImGui::SliderFloat("Low Mid", &bands.low_mid, 0.0f, 15000.0f);
-            ImGui::SliderFloat("Mid", &bands.mid, 0.0f, 16000.0f);
-            ImGui::SliderFloat("High Mid", &bands.high_mid, 0.0f, 5000.0f);
-            ImGui::SliderFloat("Presence", &bands.presence, 0.0f, 3500.0f);
-            ImGui::SliderFloat("Brilliance", &bands.brilliance, 0.0f, 3000.0f);
-            ImGui::SliderFloat("Air", &bands.air, 0.0f, 450.0f);
+            ImGui::SliderFloat("Sub Bass", &bands.sub_bass, 0.0f, 10.0f);
+            ImGui::SliderFloat("Bass", &bands.bass, 0.0f, 10.0f);
+            ImGui::SliderFloat("Low Mid", &bands.low_mid, 0.0f, 10.0f);
+            ImGui::SliderFloat("Mid", &bands.mid, 0.0f, 10.0f);
+            ImGui::SliderFloat("High Mid", &bands.high_mid, 0.0f, 10.0f);
+            ImGui::SliderFloat("Presence", &bands.presence, 0.0f, 10.0f);
+            ImGui::SliderFloat("Brilliance", &bands.brilliance, 0.0f, 10.0f);
+            ImGui::SliderFloat("Air", &bands.air, 0.0f, 10.0f);
             ImGui::EndTabItem();
         }
 

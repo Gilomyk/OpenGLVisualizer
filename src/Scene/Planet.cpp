@@ -113,7 +113,7 @@ void Planet::DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera
     renderer.Draw(m_Mesh, shader, GL_TRIANGLES);
 }
 
-void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
+void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera, float rmsSmoothed, float lightIntensityDynamic) {
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, m_Position);
     model = glm::scale(model, m_Scale);
@@ -125,9 +125,18 @@ void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
     shader.SetUniformMat4f("uProjection", camera.GetProjectionMatrix());
 
     shader.SetUniform1f("uTime", glfwGetTime());
-    shader.SetUniform3f("uBaseColor", 0.7f, 0.6f, 0.7f);
+
+    glm::vec3 baseColor = glm::mix(
+        glm::vec3(1.0f, 0.7f, 0.4f), // ciep³y pomarañcz przy RMS=1
+        glm::vec3(0.7f, 0.6f, 0.7f), // ró¿owo-fioletowy przy RMS=0
+        1.0f - rmsSmoothed
+    );
+    shader.SetUniform3fv("uBaseColor", baseColor);
+
     shader.SetUniform1f("uFlickerStrength", 0.2f);
     shader.SetUniform1f("uGradientFalloff", 1.5f);
+
+    shader.SetUniform1f("uEmissiveIntensity", lightIntensityDynamic);
 
     if (m_Texture) {
         // tryb z tekstur¹ (np. S³oñce)

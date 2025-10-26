@@ -82,6 +82,6 @@ public:
 
 	// Rysowanie
     void DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera);
-    void DrawSun(Shader& shader, Renderer& renderer, const Camera& camera);
+    void DrawSun(Shader& shader, Renderer& renderer, const Camera& camera, float rmsSmoothed, float lightIntensityDynamic);
 	void DebugPrint() const;
 };

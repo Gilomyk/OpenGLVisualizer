@@ -244,11 +244,18 @@ int main() {
     GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // Ustawienie funkcji mieszania dla przezroczystości
     GLCall(glEnable(GL_BLEND)); // Włączenie mieszania kolorów
 
+    AudioFrame currentFrame = AudioFrame();
+    AudioMapper audio;
 
     // Ładowanie parametrów audio
-    AudioMapper audio;
-    audio.LoadFromJSON("data/analysis_with_stats.json");
-	AudioFrame currentFrame = audio.GetFrame(0);
+    if (!testGUIMode) {
+        std::cout << "Audio reactive mode enabled.\n";
+        audio.LoadFromJSON("data/analysis_with_stats.json");
+        currentFrame = audio.GetFrame(0);
+    }
+    else {
+        std::cout << "Test GUI mode enabled.\n";
+    }
 
 	// Planety - materiały
     Texture earthDiffuse("res/textures/earth_diff.png");
@@ -310,10 +317,11 @@ int main() {
     static int frameIndex = 0;
 
 	// Parametry regulowane przez GUI
-    float scaleSensitivity = 1.0f;
+	float scaleSensitivity = 1.0f;           // czułość skalowania
 
 	// Odtwarzanie dźwięku (opcjonalne)
-    PlaySound(TEXT("res/audio/slowa.wav"), NULL, SND_FILENAME | SND_ASYNC);
+	if (testGUIMode == false)
+        PlaySound(TEXT("res/audio/slowa.wav"), NULL, SND_FILENAME | SND_ASYNC);
 
     //mciSendString(L"open \"res/audio/Tchaikovsky-Waltz-of-the-Flowers.mp3\" type mpegvideo alias music", NULL, 0, NULL);
     //mciSendString(L"play music", NULL, 0, NULL);
@@ -325,6 +333,11 @@ int main() {
 		renderTime = glfwGetTime() - startTime;
 
         float dt = getDeltaTime();
+
+		// Parametry światła słonecznego zależne od audio
+        static float sunBaseScale = 1.0f;       // podstawowy rozmiar słońca
+        static float lightBaseIntensity = 1.0f;  // intensywność światła
+        static float rmsSmoothed = 0.0f;         // do filtrowania RMS
 
         processInput(window);
         camera.Update(dt);
@@ -368,18 +381,29 @@ int main() {
             ImGui::Text("Delta Time: %.3f", dt);
             ImGui::End();
 
-			if (testGUIMode)
+            if (testGUIMode) {
                 audioGUI.DrawImGUI();
-            else {
-                ImGui::Begin("Parameter control");
-                ImGui::SliderFloat("Scale Sensitivity", &scaleSensitivity, 0.0f, 20.0f);
-				ImGui::End();
             }
+
+            ImGui::Begin("Parameter control");
+            ImGui::SliderFloat("Scale Sensitivity", &scaleSensitivity, 0.0f, 20.0f);
+            ImGui::Separator();
+            ImGui::Text("Global Light:");
+            ImGui::SliderFloat("Sun Base Scale", &sunBaseScale, 0.1f, 5.0f);
+            ImGui::SliderFloat("Light Base Intensity", &lightBaseIntensity, 0.05f, 1.0f);
+            ImGui::Text("RMS Smoothed: %.3f", rmsSmoothed);
+            //ImGui::Text("Sun Scale Dynamic: %.2f", sunScaleDynamic);
+            //ImGui::Text("Light Intensity: %.2f", lightIntensityDynamic);
+            ImGui::End();
 
         }
 
 		// Test parametrów za pomocą GUI
 		if (testGUIMode) {
+
+            float alpha = 1.0f - exp(-dt / 0.2f); // tau = 0.2s
+            rmsSmoothed += alpha * (audioGUI.rms - rmsSmoothed);
+
 			currentFrame.bands.sub_bass = audioGUI.bands.sub_bass;
 			currentFrame.bands.bass = audioGUI.bands.bass;
 			currentFrame.bands.low_mid = audioGUI.bands.low_mid;
@@ -396,8 +420,23 @@ int main() {
 				frameIndex = 0;
 			//currentFrame = audio.GetFrame(frameIndex);
             currentFrame = audio.GetSmoothedFrame(frameIndex);
+
+			float rms = audio.MapValue(AudioVisualParam::SUN_EMISSION, frameIndex);
+            // Aktualizacja RMS z filtrem wygładzającym
+            float alpha = 1.0f - exp(-dt / 0.2f); // tau = 0.2s
+            rmsSmoothed += alpha * (rms - rmsSmoothed);
 		}
 
+        // nieliniowa reakcja (mocniejszy puls)
+        float rmsResponse = pow(rmsSmoothed, 0.8f);
+
+        // pulsujący rozmiar słońca
+        float sunScaleDynamic = sunBaseScale * (1.0f + rmsResponse * 0.4f); // 40% max rozszerzenie
+
+        // globalne światło
+        float lightIntensityDynamic = lightBaseIntensity * (1.0f + rmsResponse * 0.8f);
+
+		// Aktualizacja pasm audio
         std::vector<std::pair<std::string, float>> newBands = {
             {"sub_bass", currentFrame.bands.sub_bass},
             {"bass", currentFrame.bands.bass},
@@ -426,9 +465,9 @@ int main() {
             planet->Update(dt);
 
 			if (planet.get() == planets[0].get()) { // słońce
-				glm::vec3 scaleB(sunScale, sunScale, sunScale);
-				planet->SetScale(scaleB);
-				planet->DrawSun(sunShader, renderer, camera);
+                glm::vec3 sunScaleVec(sunScaleDynamic);
+				planet->SetScale(sunScaleVec);
+				planet->DrawSun(sunShader, renderer, camera, rmsSmoothed, lightIntensityDynamic);
 				continue;
 			}
 
