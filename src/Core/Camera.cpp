@@ -6,7 +6,7 @@ Camera::Camera(float fov, float aspectRatio, float nearPlane, float farPlane)
 	MovementSpeed(1000.0f),
 	MouseSensitivity(0.1f),
 	Zoom(fov),
-	Position(glm::vec3(0.0f, 0.0f, 300.0f)),
+	Position(glm::vec3(0.0f, 100.0f, 600.0f)),
 	WorldUp(glm::vec3(0.0f, 1.0f, 0.0f))
 {
 	Projection = glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);

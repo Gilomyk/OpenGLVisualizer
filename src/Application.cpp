@@ -9,6 +9,11 @@
 #include <iostream>
 #include <random>
 
+#include <windows.h>
+#include <Mmsystem.h>
+//these two headers are already included in the <Windows.h> header
+#pragma comment(lib, "Winmm.lib")
+
 #include "Renderer.h"
 #include "VertexArray.h"
 #include "VertexBuffer.h"
@@ -40,10 +45,15 @@
 
 #define WIDTH 1920
 #define HEIGHT 1080
+#define AUDIO_FRAMERATE 40
 
 // Ustawienia kamery
-Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
+Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1500.0f);
 bool cameraMode = false;
+
+bool testGUIMode = false;
+float startTime = 0.0f;
+float renderTime = 0.0f;
 
 // Callback do zmiany rozmiaru okna
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -56,7 +66,7 @@ float getDeltaTime() {
     double currentTime = glfwGetTime();
     float delta = float(currentTime - lastTime);
     lastTime = currentTime;
-    if (delta < 0.01f) delta = 0.01f;
+    if (delta < 0.01f) delta = 0.01f; 
     if (delta > 0.033f) delta = 0.033f;
     return delta;
 }
@@ -250,7 +260,7 @@ int main() {
     auto planets = GenerateSystem(&sunDiffuse, currentFrame);
 
     // Generowanie gwiazd
-    Stars stars(2000, 500.0f);
+    Stars stars(2000, 750.0f);
 
 	// Shader i renderer
     Shader sunShader("shaders/unlit_emissive.vert", "shaders/unlit_emissive.frag");
@@ -298,8 +308,15 @@ int main() {
 	// Indeks klatki audio
     static int frameIndex = 0;
 
+	// Odtwarzanie dźwięku (opcjonalne)
+    PlaySound(TEXT("res/audio/slowa.wav"), NULL, SND_FILENAME | SND_ASYNC);
+
     // 🔁 Pętla renderująca
     while (!glfwWindowShouldClose(window)) {
+		if (startTime == 0.0f)
+			startTime = glfwGetTime();
+		renderTime = glfwGetTime() - startTime;
+
         float dt = getDeltaTime();
 
         processInput(window);
@@ -334,29 +351,54 @@ int main() {
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edytor koloru
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
+			ImGui::Separator();
+            ImGui::Text("Current Audio Frame: %d", frameIndex);
+            ImGui::Text("Audio Time: %.2f", currentFrame.time);
+            ImGui::Text("Render Time: %.3f", renderTime);
+            ImGui::Text("Actual Time: %.3f", glfwGetTime());
+            ImGui::Text("Difference: %.3f", glfwGetTime() - currentFrame.time);
+            ImGui::Text("Delta Time: %.3f", dt);
             ImGui::End();
 
-            audioGUI.DrawImGUI();
+			if (testGUIMode)
+                audioGUI.DrawImGUI();
         }
 
 		// Test parametrów za pomocą GUI
-
+		if (testGUIMode) {
+			currentFrame.bands.sub_bass = audioGUI.bands.sub_bass;
+			currentFrame.bands.bass = audioGUI.bands.bass;
+			currentFrame.bands.low_mid = audioGUI.bands.low_mid;
+			currentFrame.bands.mid = audioGUI.bands.mid;
+			currentFrame.bands.high_mid = audioGUI.bands.high_mid;
+			currentFrame.bands.presence = audioGUI.bands.presence;
+			currentFrame.bands.brilliance = audioGUI.bands.brilliance;
+			currentFrame.bands.air = audioGUI.bands.air;
+		}
+		else {
+			// Aktualizacja klatki audio na podstawie czasu
+			frameIndex = (int)(renderTime * AUDIO_FRAMERATE);
+			if (frameIndex >= audio.GetFrameCount())
+				frameIndex = 0;
+			currentFrame = audio.GetFrame(frameIndex);
+		}
         std::vector<std::pair<std::string, float>> newBands = {
-            {"sub_bass", audioGUI.bands.sub_bass},
-            {"bass", audioGUI.bands.bass},
-            {"low_mid", audioGUI.bands.low_mid},
-            {"mid", audioGUI.bands.mid},
-            {"high_mid", audioGUI.bands.high_mid},
-            {"presence", audioGUI.bands.presence},
-            {"brilliance", audioGUI.bands.brilliance},
-            {"air", audioGUI.bands.air}
+            {"sub_bass", currentFrame.bands.sub_bass},
+            {"bass", currentFrame.bands.bass},
+            {"low_mid", currentFrame.bands.low_mid},
+            {"mid", currentFrame.bands.mid},
+            {"high_mid", currentFrame.bands.high_mid},
+            {"presence", currentFrame.bands.presence},
+            {"brilliance", currentFrame.bands.brilliance},
+            {"air", currentFrame.bands.air}
         };
 
         for (size_t i = 1; i < planets.size(); ++i) {
             float newAmplitude = newBands[i-1].second;
 
             // Rozmiar i odległość zależne od pasma
-            float scale = 1.0f + newAmplitude * 0.001f;
+            float scale = 1.0f + newAmplitude * 0.0002f;
             float orbitRadius = 80.0f + i * 50.0f + newAmplitude * 0.002f;
 
 			planets[i]->SetScale(glm::vec3(scale));
