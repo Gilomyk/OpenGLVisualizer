@@ -195,11 +195,13 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture, const A
         float spinSpeed = randf(-100.0f, 100.0f);
         glm::vec3 tilt(randf(-10, 10), randf(0, 360), randf(-5, 5));
         Material material = MaterialGenerator::RandomMaterial();
+		Material baseMaterial = material;
 
         auto planet = std::make_unique<Planet>(
             radius, 50, 50, orbitRadius, tilt, orbitSpeed, spinSpeed, sunPtr, enableOrbit
         );
         planet->SetMaterial(material);
+		planet->SetBaseDiffuse(material.diffuse);
         planets.push_back(std::move(planet));
     }
 
@@ -244,8 +246,12 @@ int main() {
     GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // Ustawienie funkcji mieszania dla przezroczystości
     GLCall(glEnable(GL_BLEND)); // Włączenie mieszania kolorów
 
-    AudioFrame currentFrame = AudioFrame();
+	// Inicjalizacja audio
     AudioMapper audio;
+    AudioFrame currentFrame = AudioFrame();
+
+    // Panel kontrolny GUI dla audio
+    GUIControlPanel audioGUI;
 
     // Ładowanie parametrów audio
     if (!testGUIMode) {
@@ -255,6 +261,8 @@ int main() {
     }
     else {
         std::cout << "Test GUI mode enabled.\n";
+        audio.LoadFromJSON("data/analysis_with_stats.json", true);
+		audioGUI.setBandRanges(audio.GetBandStats());
     }
 
 	// Planety - materiały
@@ -286,9 +294,6 @@ int main() {
     sunShader.Bind();
     sunShader.SetUniform1i("uDiffuseMap", 0);
 
-	// Panel kontrolny GUI dla audio
-    GUIControlPanel audioGUI;
-
     // Inicjalizacja GUI
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -319,6 +324,12 @@ int main() {
 	// Parametry regulowane przez GUI
 	float scaleSensitivity = 1.0f;           // czułość skalowania
 
+
+    // Parametry światła słonecznego zależne od audio
+    //static float sunBaseScale = 1.0f;       // podstawowy rozmiar słońca
+    //static float lightBaseIntensity = 1.0f;  // intensywność światła
+    static float rmsSmoothed = 0.0f;         // do filtrowania RMS
+
 	// Odtwarzanie dźwięku (opcjonalne)
 	if (testGUIMode == false)
         PlaySound(TEXT("res/audio/slowa.wav"), NULL, SND_FILENAME | SND_ASYNC);
@@ -333,11 +344,6 @@ int main() {
 		renderTime = glfwGetTime() - startTime;
 
         float dt = getDeltaTime();
-
-		// Parametry światła słonecznego zależne od audio
-        static float sunBaseScale = 1.0f;       // podstawowy rozmiar słońca
-        static float lightBaseIntensity = 1.0f;  // intensywność światła
-        static float rmsSmoothed = 0.0f;         // do filtrowania RMS
 
         processInput(window);
         camera.Update(dt);
@@ -373,37 +379,40 @@ int main() {
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 
 			ImGui::Separator();
-            ImGui::Text("Current Audio Frame: %d", frameIndex);
-            ImGui::Text("Audio Time: %.2f", currentFrame.time);
-            ImGui::Text("Render Time: %.3f", renderTime);
-            ImGui::Text("Actual Time: %.3f", glfwGetTime());
-            ImGui::Text("Difference: %.3f", glfwGetTime() - currentFrame.time);
-            ImGui::Text("Delta Time: %.3f", dt);
+			ImGui::Text("Audio Frame Index: %d / %d", frameIndex, audio.GetFrameCount());
+			ImGui::Text("RMS: %.3f", currentFrame.rms);
+			ImGui::Text("Bands:");
+			ImGui::Text(" Sub Bass: %.3f", currentFrame.bands.sub_bass);
+			ImGui::Text(" Bass: %.3f", currentFrame.bands.bass);
+			ImGui::Text(" Low Mid: %.3f", currentFrame.bands.low_mid);
+			ImGui::Text(" Mid: %.3f", currentFrame.bands.mid);
+			ImGui::Text(" High Mid: %.3f", currentFrame.bands.high_mid);
+			ImGui::Text(" Presence: %.3f", currentFrame.bands.presence);
+			ImGui::Text(" Brilliance: %.3f", currentFrame.bands.brilliance);
+			ImGui::Text(" Air: %.3f", currentFrame.bands.air);
             ImGui::End();
 
             if (testGUIMode) {
                 audioGUI.DrawImGUI();
             }
 
-            ImGui::Begin("Parameter control");
-            ImGui::SliderFloat("Scale Sensitivity", &scaleSensitivity, 0.0f, 20.0f);
-            ImGui::Separator();
-            ImGui::Text("Global Light:");
-            ImGui::SliderFloat("Sun Base Scale", &sunBaseScale, 0.1f, 5.0f);
-            ImGui::SliderFloat("Light Base Intensity", &lightBaseIntensity, 0.05f, 1.0f);
-            ImGui::Text("RMS Smoothed: %.3f", rmsSmoothed);
-            //ImGui::Text("Sun Scale Dynamic: %.2f", sunScaleDynamic);
-            //ImGui::Text("Light Intensity: %.2f", lightIntensityDynamic);
-            ImGui::End();
+            //ImGui::Begin("Parameter control");
+            //ImGui::SliderFloat("Scale Sensitivity", &scaleSensitivity, 0.0f, 20.0f);
+            //ImGui::Separator();
+            //ImGui::Text("Global Light:");
+            //ImGui::SliderFloat("Sun Base Scale", &sunBaseScale, 0.1f, 5.0f);
+            //ImGui::SliderFloat("Light Base Intensity", &lightBaseIntensity, 0.05f, 1.0f);
+            //ImGui::Text("RMS Smoothed: %.3f", rmsSmoothed);
+            ////ImGui::Text("Sun Scale Dynamic: %.2f", sunScaleDynamic);
+            ////ImGui::Text("Light Intensity: %.2f", lightIntensityDynamic);
+            //ImGui::End();
 
         }
 
 		// Test parametrów za pomocą GUI
 		if (testGUIMode) {
-
-            float alpha = 1.0f - exp(-dt / 0.2f); // tau = 0.2s
-            rmsSmoothed += alpha * (audioGUI.rms - rmsSmoothed);
-
+            frameIndex = 0;
+			currentFrame.rms = audioGUI.rms;
 			currentFrame.bands.sub_bass = audioGUI.bands.sub_bass;
 			currentFrame.bands.bass = audioGUI.bands.bass;
 			currentFrame.bands.low_mid = audioGUI.bands.low_mid;
@@ -412,64 +421,106 @@ int main() {
 			currentFrame.bands.presence = audioGUI.bands.presence;
 			currentFrame.bands.brilliance = audioGUI.bands.brilliance;
 			currentFrame.bands.air = audioGUI.bands.air;
-		}
-		else {
-			// Aktualizacja klatki audio na podstawie czasu
-			frameIndex = (int)(renderTime * AUDIO_FRAMERATE);
-			if (frameIndex >= audio.GetFrameCount())
-				frameIndex = 0;
-			//currentFrame = audio.GetFrame(frameIndex);
-            currentFrame = audio.GetSmoothedFrame(frameIndex);
+            
+			audio.UpdateFrameDirectly(currentFrame);
+            audio.UpdateSmoothedBands(frameIndex);
+        }
+        // Aktualizacja klatki audio na podstawie czasu
+        else {
+            frameIndex = (int)(renderTime * AUDIO_FRAMERATE);
+            if (frameIndex >= audio.GetFrameCount())
+                frameIndex = 0;
+			currentFrame = audio.GetFrame(frameIndex); // for GUI display
 
-			float rms = audio.MapValue(AudioVisualParam::SUN_EMISSION, frameIndex);
-            // Aktualizacja RMS z filtrem wygładzającym
-            float alpha = 1.0f - exp(-dt / 0.2f); // tau = 0.2s
-            rmsSmoothed += alpha * (rms - rmsSmoothed);
-		}
+            audio.UpdateSmoothedBands(frameIndex);
+        }
 
-        // nieliniowa reakcja (mocniejszy puls)
-        float rmsResponse = pow(rmsSmoothed, 0.8f);
+        // Pobieranie zmapowanych wartości audio
+        float sunEmissionVal = audio.MapValue(AudioVisualParam::SUN_EMISSION, frameIndex);
+        float sunScaleVal = audio.MapValue(AudioVisualParam::PLANET_SCALE, frameIndex);
+        float orbitShakeVal = audio.MapValue(AudioVisualParam::ORBIT_SHAKE, frameIndex);
+        float planetColorVal = audio.MapValue(AudioVisualParam::PLANET_COLOR, frameIndex);
+        float specularVal = audio.MapValue(AudioVisualParam::SPECULAR_INTENSITY, frameIndex);
+        float noiseAmountVal = audio.MapValue(AudioVisualParam::NOISE_AMOUNT, frameIndex);
+        float atmosphereAlphaV = audio.MapValue(AudioVisualParam::ATMOSPHERE_ALPHA, frameIndex);
 
-        // pulsujący rozmiar słońca
-        float sunScaleDynamic = sunBaseScale * (1.0f + rmsResponse * 0.4f); // 40% max rozszerzenie
 
-        // globalne światło
-        float lightIntensityDynamic = lightBaseIntensity * (1.0f + rmsResponse * 0.8f);
+		// Aktualizacja słońca
 
-		// Aktualizacja pasm audio
-        std::vector<std::pair<std::string, float>> newBands = {
-            {"sub_bass", currentFrame.bands.sub_bass},
-            {"bass", currentFrame.bands.bass},
-            {"low_mid", currentFrame.bands.low_mid},
-            {"mid", currentFrame.bands.mid},
-            {"high_mid", currentFrame.bands.high_mid},
-            {"presence", currentFrame.bands.presence},
-            {"brilliance", currentFrame.bands.brilliance},
-            {"air", currentFrame.bands.air}
-        };
+        {
+            // skala słońca (PLANET_SCALE)
+            glm::vec3 sunScaleVec(sunScaleVal);
+            planets[0]->SetScale(sunScaleVec);
+
+			// ustawienia materiału słońca (SUN_EMISSION)
+
+            sunShader.Bind();
+
+            glm::vec3 baseColor = glm::mix(
+                glm::vec3(0.7f, 0.6f, 0.7f), // zimny przy niskim emisji
+                glm::vec3(1.0f, 0.7f, 0.4f), // ciepły przy wysokiej emisji
+                sunEmissionVal
+            );
+
+            sunShader.SetUniform3fv("uBaseColor", baseColor);
+            sunShader.SetUniform1f("uEmissiveIntensity", sunEmissionVal); // jeśli chcesz
+        }
+
+		// --- Aktualizacja planet ---
 
         for (size_t i = 1; i < planets.size(); ++i) {
-            float newAmplitude = newBands[i-1].second;
 
-            // Rozmiar i odległość zależne od pasma
-            float scale = 1.0f + newAmplitude * scaleSensitivity;
-            float orbitRadius = 80.0f + i * 50.0f + newAmplitude * (scaleSensitivity * 10.0f);
+			// Skala planet na podstawie pasma audio (MapBandForPlanet)
+            float bandMapped = audio.MapBandForPlanet(frameIndex, i - 1);
 
-			planets[i]->SetScale(glm::vec3(scale));
-			planets[i]->SetOrbitRadius(orbitRadius);
-		}
+            float scale = 1.0f + bandMapped * scaleSensitivity;
+            float baseOrbit = 80.0f + i * 50.0f;
+            float orbitRadius = baseOrbit + bandMapped * (scaleSensitivity * 10.0f);
 
-		// Animacja
-		// Cały układ słoneczny
+            planets[i]->SetScale(glm::vec3(scale));
+            planets[i]->SetOrbitRadius(orbitRadius);
+
+			// Drgania orbity (ORBIT_SHAKE)
+            glm::vec3 baseTilt = planets[i]->GetBaseOrbitTilt(); // dodaj taką metodę/atrybut albo trzymaj wartość
+            float shakeAmp = 15.0f;
+            glm::vec3 newTilt = baseTilt + glm::vec3(orbitShakeVal * shakeAmp, 0.0f, 0.0f);
+
+            planets[i]->SetOrbitTilt(newTilt);
+
+			// Kolor planet (PLANET_COLOR)
+			Material matBase = planets[i]->GetBaseMaterial(); // niezmieniony materiał bazowy
+			Material mat = planets[i]->GetMaterial(); // materiał do modyfikacji
+
+            glm::vec3 baseColor = planets[i]->GetBaseDiffuse();
+
+            glm::vec3 colorShift = glm::mix(
+                glm::vec3(0.9f, 0.95f, 1.0f),   // lekko chłodniej
+                glm::vec3(1.1f, 0.95f, 0.8f),   // lekko cieplej
+                planetColorVal
+            );
+
+            // ustawienia materiału
+            mat.diffuse = baseColor * colorShift;
+            mat.ambient = mat.diffuse * 0.15f;
+			mat.specular = glm::vec3(specularVal); // regulacja intensywności (SPECULAR_INTENSITY)
+
+            planets[i]->SetMaterial(mat);
+
+			// Inne parametry (NOISE_AMOUNT, ATMOSPHERE_ALPHA) - do zaimplementowania w shaderze planety
+			planetShader.Bind();
+			planetShader.SetUniform1f("uNoiseAmount", noiseAmountVal);
+			planetShader.SetUniform1f("uAtmosphereAlpha", atmosphereAlphaV);
+        }
+
+
+        // --- Rysowanie ---
         for (auto& planet : planets) {
             planet->Update(dt);
 
-			if (planet.get() == planets[0].get()) { // słońce
-                glm::vec3 sunScaleVec(sunScaleDynamic);
-				planet->SetScale(sunScaleVec);
-				planet->DrawSun(sunShader, renderer, camera, rmsSmoothed, lightIntensityDynamic);
-				continue;
-			}
+        	if (planet.get() == planets[0].get()) { // słońce
+        		planet->DrawSun(sunShader, renderer, camera);
+        		continue;
+        	}
 
             planet->DrawPlanet(planetShader, renderer, camera);
 
@@ -481,17 +532,42 @@ int main() {
         }
         stars.Draw(starShader, camera);
 
-        // Gwiazdy
+		//float rms = audio.MapValue(AudioVisualParam::SUN_EMISSION, frameIndex);
+  //      // Aktualizacja RMS z filtrem wygładzającym
+  //      float alpha = 1.0f - exp(-dt / 0.2f); // tau = 0.2s
+  //      rmsSmoothed += alpha * (rms - rmsSmoothed);
+
+  //      // nieliniowa reakcja (mocniejszy puls)
+  //      float rmsResponse = pow(newBands[1].second, 0.8f);
+
+  //      // pulsujący rozmiar słońca
+  //      float sunScaleDynamic = sunBaseScale * (1.0f + rmsResponse * 0.4f); // 40% max rozszerzenie
+
+  //      // globalne światło
+  //      float lightIntensityDynamic = lightBaseIntensity * (1.0f + rmsResponse * 0.8f);
         
 		// Debug print co sekundę
-        /*static float debugTimer = 0.0f;
+        static float debugTimer = 0.0f;
         debugTimer += dt;
         if (debugTimer > 1.0f) {
-            for (auto& planet : planets) {
-                planet->DebugPrint();
-            }
+			std::cout << "Frame Index: " << frameIndex << "\n";
+			std::cout << "Sun Emission Value: " << sunEmissionVal << "\n";
+			std::cout << "Sun Scale Value: " << sunScaleVal << "\n";
+			std::cout << "Orbit Shake Value: " << orbitShakeVal << "\n";
+			std::cout << "Planet Color Value: " << planetColorVal << "\n";
+			std::cout << "Specular Intensity Value: " << specularVal << "\n";
+			std::cout << "Noise Amount Value: " << noiseAmountVal << "\n";
+			std::cout << "Atmosphere Alpha Value: " << atmosphereAlphaV << "\n";
+
+			glm::vec3 baseColor = planets[1]->GetBaseMaterial().diffuse;
+			glm::vec3 currentColor = planets[1]->GetMaterial().diffuse;
+			std::cout << "Base Material Color: " << baseColor.r << ", " << baseColor.g << ", " << baseColor.b << "\n";
+			std::cout << "Current Material Color: " << currentColor.r << ", " << currentColor.g << ", " << currentColor.b << "\n";
+            /*for (auto& planet : planets) {
+				  planet->DebugPrint();
+            }*/
             debugTimer = 0.0f;
-        }*/
+        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

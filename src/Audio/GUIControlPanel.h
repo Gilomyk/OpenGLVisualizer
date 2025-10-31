@@ -2,6 +2,7 @@
 #pragma once
 #include <array>
 #include <string>
+#include "AudioMapper.h"
 
 struct GUIControlPanel
 {
@@ -15,15 +16,26 @@ struct GUIControlPanel
     bool is_beat = false;
 
     struct Bands {
-        float sub_bass = 100.0f;
-        float bass = 500.0f;
-        float low_mid = 1000.0f;
-        float mid = 2000.0f;
-        float high_mid = 4000.0f;
-        float presence = 6000.0f;
-        float brilliance = 8000.0f;
-        float air = 10000.0f;
+        float sub_bass = 1.0f;
+        float bass = 1.0f;
+        float low_mid = 1.0f;
+        float mid = 1.0f;
+        float high_mid = 1.0f;
+        float presence = 1.0f;
+        float brilliance = 1.0f;
+        float air = 1.0f;
     } bands;
+
+    struct BandRanges {
+        float sub_bass_min, sub_bass_max;
+        float bass_min, bass_max;
+        float low_mid_min, low_mid_max;
+        float mid_min, mid_max;
+        float high_mid_min, high_mid_max;
+        float presence_min, presence_max;
+        float brilliance_min, brilliance_max;
+        float air_min, air_max;
+    } bandRanges;
 
     std::array<float, 5> fft_peak_freq{};
     std::array<float, 5> fft_peak_amp{};
@@ -34,6 +46,8 @@ struct GUIControlPanel
 
     GUIControlPanel()
     {
+		bandRanges = { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+					  0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f };
         fft_peak_freq.fill(0.0f);
         fft_peak_amp.fill(0.0f);
         spectral_contrast.fill(0.0f);
@@ -42,5 +56,6 @@ struct GUIControlPanel
         mfcc_delta.fill(0.0f);
     }
 
+    void setBandRanges(AudioBandsMaxMin stats);
     void DrawImGUI();
 };

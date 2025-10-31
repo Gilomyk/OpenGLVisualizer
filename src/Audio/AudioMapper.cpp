@@ -21,36 +21,12 @@ static float Clamp01(float v) {
     return clamp(v, 0.0f, 1.0f);
 }
 
-// algorytmy normalizacji
-
-static float LogNormalize(float value, float minVal, float maxVal) {
-    float logMin = std::log10(minVal + 1.0f);
-    float logMax = std::log10(maxVal + 1.0f);
-    float logVal = std::log10(value + 1.0f);
-    return Clamp01((logVal - logMin) / (logMax - logMin));
-}
-
-static float NormalizeBandSoft(float value, float minVal, float maxVal, float gamma = 0.6f) {
-    float norm = (value - minVal) / (maxVal - minVal);
-    norm = clamp(norm, 0.0f, 1.0f);
-    return std::pow(norm, gamma);
-}
-
-static float NormalizeBandHybrid(float value, float minVal, float maxVal, float blend = 0.01f) {
-    float lin = clamp((value - minVal) / (maxVal - minVal), 0.0f, 1.0f);
-    float logMin = std::log10(minVal + 1.0f);
-    float logMax = std::log10(maxVal + 1.0f);
-    float logVal = std::log10(value + 1.0f);
-    float logr = (logVal - logMin) / (logMax - logMin);
-    return clamp(blend * logr + (1.0f - blend) * lin, 0.0f, 1.0f);
-}
-
 
 
 
 // -------------------- ŁADOWANIE DANYCH AUDIO --------------------
 
-bool AudioMapper::LoadFromJSON(const std::string& path)
+bool AudioMapper::LoadFromJSON(const std::string& path, bool onlyStats)
 {
     std::ifstream file(path);
     if (!file.is_open()) {
@@ -60,6 +36,52 @@ bool AudioMapper::LoadFromJSON(const std::string& path)
 
     json j;
     file >> j;
+
+    const auto& s = j["stats"];
+    if (s.contains("bands-sub_bass")) {
+        const auto& bandStats = s["bands-sub_bass"];
+        m_BandStats.sub_bass_min = bandStats.value("min", 0.0f);
+        m_BandStats.sub_bass_max = bandStats.value("max", 1.0f);
+    }
+    if (s.contains("bands-bass")) {
+        const auto& bandStats = s["bands-bass"];
+        m_BandStats.bass_min = bandStats.value("min", 0.0f);
+        m_BandStats.bass_max = bandStats.value("max", 1.0f);
+    }
+    if (s.contains("bands-low_mid")) {
+        const auto& bandStats = s["bands-low_mid"];
+        m_BandStats.low_mid_min = bandStats.value("min", 0.0f);
+        m_BandStats.low_mid_max = bandStats.value("max", 1.0f);
+    }
+    if (s.contains("bands-mid")) {
+        const auto& bandStats = s["bands-mid"];
+        m_BandStats.mid_min = bandStats.value("min", 0.0f);
+        m_BandStats.mid_max = bandStats.value("max", 1.0f);
+    }
+    if (s.contains("bands-high_mid")) {
+        const auto& bandStats = s["bands-high_mid"];
+        m_BandStats.high_mid_min = bandStats.value("min", 0.0f);
+        m_BandStats.high_mid_max = bandStats.value("max", 1.0f);
+    }
+    if (s.contains("bands-presence")) {
+        const auto& bandStats = s["bands-presence"];
+        m_BandStats.presence_min = bandStats.value("min", 0.0f);
+        m_BandStats.presence_max = bandStats.value("max", 1.0f);
+    }
+    if (s.contains("bands-brilliance")) {
+        const auto& bandStats = s["bands-brilliance"];
+        m_BandStats.brilliance_min = bandStats.value("min", 0.0f);
+        m_BandStats.brilliance_max = bandStats.value("max", 1.0f);
+    }
+    if (s.contains("bands-air")) {
+        const auto& bandStats = s["bands-air"];
+        m_BandStats.air_min = bandStats.value("min", 0.0f);
+        m_BandStats.air_max = bandStats.value("max", 1.0f);
+    }
+    printf("Zapisano statystyki pasma audio.\n");
+
+	if (onlyStats)
+		return true;
     
     const auto& frames = j["frames"];
     m_Frames.reserve(frames.size());
@@ -114,95 +136,133 @@ bool AudioMapper::LoadFromJSON(const std::string& path)
 
     std::cout << "Załadowano " << m_Frames.size() << " ramek audio." << std::endl;
 
-	const auto& s = j["stats"];
-	if (s.contains("bands-sub_bass")) {
-		const auto& bandStats = s["bands-sub_bass"];
-		m_BandStats.sub_bass_min = bandStats.value("min", 0.0f);
-		m_BandStats.sub_bass_max = bandStats.value("max", 1.0f);
-	}
-    if (s.contains("bands-bass")) {
-        const auto& bandStats = s["bands-bass"];
-        m_BandStats.bass_min = bandStats.value("min", 0.0f);
-        m_BandStats.bass_max = bandStats.value("max", 1.0f);
-    }
-	if (s.contains("bands-low_mid")) {
-		const auto& bandStats = s["bands-low_mid"];
-		m_BandStats.low_mid_min = bandStats.value("min", 0.0f);
-		m_BandStats.low_mid_max = bandStats.value("max", 1.0f);
-	}
-	if (s.contains("bands-mid")) {
-		const auto& bandStats = s["bands-mid"];
-		m_BandStats.mid_min = bandStats.value("min", 0.0f);
-		m_BandStats.mid_max = bandStats.value("max", 1.0f);
-	}
-    if (s.contains("bands-high_mid")) {
-        const auto& bandStats = s["bands-high_mid"];
-        m_BandStats.high_mid_min = bandStats.value("min", 0.0f);
-        m_BandStats.high_mid_max = bandStats.value("max", 1.0f);
-    }
-	if (s.contains("bands-presence")) {
-		const auto& bandStats = s["bands-presence"];
-		m_BandStats.presence_min = bandStats.value("min", 0.0f);
-		m_BandStats.presence_max = bandStats.value("max", 1.0f);
-	}
-    if (s.contains("bands-brilliance")) {
-        const auto& bandStats = s["bands-brilliance"];
-        m_BandStats.brilliance_min = bandStats.value("min", 0.0f);
-        m_BandStats.brilliance_max = bandStats.value("max", 1.0f);
-    }
-    if (s.contains("bands-air")) {
-        const auto& bandStats = s["bands-air"];
-        m_BandStats.air_min = bandStats.value("min", 0.0f);
-        m_BandStats.air_max = bandStats.value("max", 1.0f);
-    }
-	printf("Zapisano statystyki pasma audio.\n");
-    
-
     return true;
 }
 
 
-// -------------------- MAPOWANIA --------------------
+// -------------------- MAPOWANIE DANYCH AUDIO NA PARAMETRY WIZUALNE --------------------
 
 float AudioMapper::MapValue(AudioVisualParam param, int frameIndex) const {
-    const auto& f = m_Frames[frameIndex];
     switch (param) {
     case AudioVisualParam::SUN_EMISSION:
-        return NormalizeRMS(f.rms);
-    case AudioVisualParam::PLANET_SCALE:
-        return NormalizeRMS(f.rms * 0.5f + f.bands.bass);
-    case AudioVisualParam::PLANET_ROTATION:
-        return NormalizeTempo(f.local_tempo);
-    case AudioVisualParam::PLANET_COLOR:
-        return NormalizeCentroid(f.spectral_centroid);
-    case AudioVisualParam::ORBIT_RADIUS:
-        return NormalizeBandwidth(f.spectral_bandwidth);
-    case AudioVisualParam::SCENE_SATURATION:
-        return NormalizeFlatness(f.spectral_flatness);
-    }
+        return MapSunEmission(frameIndex);
+	case AudioVisualParam::PLANET_SCALE:
+		return MapPlanetScale(frameIndex);
+	case AudioVisualParam::ORBIT_SHAKE:
+		return MapOrbitShake(frameIndex);
+	case AudioVisualParam::PLANET_COLOR:
+		return MapPlanetColorShift(frameIndex);
+	case AudioVisualParam::SPECULAR_INTENSITY:
+		return MapSpecularIntensity(frameIndex);
+	case AudioVisualParam::NOISE_AMOUNT:
+		return MapNoiseAmount(frameIndex);
+	case AudioVisualParam::ATMOSPHERE_ALPHA:
+		return MapAtmosphereAlpha(frameIndex);
+	case AudioVisualParam::ORBIT_RADIUS:
+		return MapOrbitRadius(frameIndex);
+	case AudioVisualParam::ROTATION_SPEED:
+		return MapRotationSpeed(frameIndex);
+	default:
+		break;
+	}
     return 0.0f;
 }
 
-glm::vec3 AudioMapper::MapColor(int frameIndex) const {
-    if (frameIndex < 0 || frameIndex >= m_Frames.size())
-        return glm::vec3(0.2f);
+// --- Mapowania ---
 
-    const auto& f = m_Frames[frameIndex];
-    float t = NormalizeCentroid(f.spectral_centroid);
-
-    // zimne barwy (niski centroid) → ciepłe barwy (wysoki centroid)
-    glm::vec3 cold(0.1f, 0.2f, 0.8f);
-    glm::vec3 warm(1.0f, 0.7f, 0.2f);
-
-    return glm::mix(cold, warm, t);
-}
-
-float AudioMapper::MapEmission(int frameIndex) const {
+float AudioMapper::MapSunEmission(int frameIndex) const {
     if (frameIndex < 0 || frameIndex >= m_Frames.size())
         return 0.0f;
 
     const auto& f = m_Frames[frameIndex];
-    return NormalizeRMS(f.rms);
+    const auto& fprev = (frameIndex == 0) ? f : m_Frames[frameIndex - 1];
+
+    float norm = NormalizeRMS(f.rms);
+    float normPrev = NormalizeRMS(fprev.rms);
+    float rms = Smooth(normPrev, norm, 0.15f);
+
+    return glm::mix(0.5f, 6.0f, pow(rms, 1.0f)); // bloom intensity
+}
+
+float AudioMapper::MapPlanetScale(int frameIndex) const {
+    if (frameIndex < 0 || frameIndex >= m_Frames.size()) return 1.0f;
+
+    const auto& f = m_Frames[frameIndex];
+    const auto& fprev = (frameIndex == 0) ? f : m_Frames[frameIndex - 1];
+
+    float norm = NormalizeBand(f.bands.bass, m_BandStats.bass_min, m_BandStats.bass_max);
+    float normPrev = NormalizeBand(f.bands.bass, m_BandStats.bass_min, m_BandStats.bass_max);
+
+    float bass = Smooth(normPrev, norm, m_SmoothAlpha);
+    return glm::mix(1.0f, 1.8f, norm); // scale multiplier
+}
+
+float AudioMapper::MapOrbitShake(int frameIndex) const {
+    if (frameIndex <= 0 || frameIndex >= m_Frames.size())
+        return 0.0f;
+
+    const auto& f = m_Frames[frameIndex];
+    const auto& fprev = (frameIndex == 0) ? f : m_Frames[frameIndex - 1];
+
+    float normPrev = NormalizeBand(fprev.bands.sub_bass, m_BandStats.sub_bass_min, m_BandStats.sub_bass_max);
+    float norm = NormalizeBand(f.bands.sub_bass, m_BandStats.sub_bass_min, m_BandStats.sub_bass_max);
+    float sub = Smooth(normPrev, norm, m_SmoothAlpha);
+
+    return glm::mix(0.0f, 0.5f, sub); // orbit shake amplitude
+}
+
+float AudioMapper::MapPlanetColorShift(int frameIndex) const {
+    if (frameIndex <= 0 || frameIndex >= m_Frames.size())
+        return 0.0f;
+
+    const auto& f = m_Frames[frameIndex];
+    const auto& fprev = (frameIndex == 0) ? f : m_Frames[frameIndex - 1];
+
+    float normPrev = NormalizeBand(fprev.bands.mid, m_BandStats.mid_min, m_BandStats.mid_max);
+    float norm = NormalizeBand(f.bands.mid, m_BandStats.mid_min, m_BandStats.mid_max);
+    float mid = Smooth(normPrev, norm, m_SmoothAlpha);
+
+    return mid; // used for color / hue modulation
+}
+
+float AudioMapper::MapSpecularIntensity(int frameIndex) const {
+    if (frameIndex <= 0 || frameIndex >= m_Frames.size())
+        return 0.0f;
+
+    const auto& f = m_Frames[frameIndex];
+    const auto& fprev = (frameIndex == 0) ? f : m_Frames[frameIndex - 1];
+
+    float normPrev = NormalizeBand(fprev.bands.high_mid, m_BandStats.high_mid_min, m_BandStats.high_mid_max);
+    float norm = NormalizeBand(f.bands.high_mid, m_BandStats.high_mid_min, m_BandStats.high_mid_max);
+    float highMid = Smooth(normPrev, norm, m_SmoothAlpha);
+
+    return glm::mix(0.1f, 2.0f, highMid); // rim / specular highlight
+}
+
+float AudioMapper::MapNoiseAmount(int frameIndex) const {
+    if (frameIndex < 0 || frameIndex >= m_Frames.size()) return 0.0f;
+
+    const auto& f = m_Frames[frameIndex];
+    const auto& fprev = (frameIndex == 0) ? f : m_Frames[frameIndex - 1];
+
+    float normPrev = NormalizeBand(fprev.bands.presence, m_BandStats.presence_min, m_BandStats.presence_max);
+    float norm = NormalizeBand(f.bands.presence, m_BandStats.presence_min, m_BandStats.presence_max);
+	float presence = Smooth(normPrev, norm, m_SmoothAlpha);
+    return glm::mix(0.0f, 1.0f, presence);
+}
+
+float AudioMapper::MapAtmosphereAlpha(int frameIndex) const {
+    if (frameIndex <= 0 || frameIndex >= m_Frames.size())
+        return 0.0f;
+
+    const auto& f = m_Frames[frameIndex];
+    const auto& fprev = (frameIndex == 0) ? f : m_Frames[frameIndex - 1];
+
+    float normPrev = NormalizeBand(fprev.bands.air, m_BandStats.air_min, m_BandStats.air_max);
+    float norm = NormalizeBand(f.bands.air, m_BandStats.air_min, m_BandStats.air_max);
+    float air = Smooth(normPrev, norm, m_SmoothAlpha);
+
+    return glm::mix(0.2f, 1.0f, air); // atmosphere alpha / halo
 }
 
 float AudioMapper::MapOrbitRadius(int frameIndex) const {
@@ -223,6 +283,20 @@ float AudioMapper::MapRotationSpeed(int frameIndex) const {
     return glm::mix(0.1f, 2.5f, contrast); // szybkość obrotu (rad/s)
 }
 
+glm::vec3 AudioMapper::MapColor(int frameIndex) const {
+    if (frameIndex < 0 || frameIndex >= m_Frames.size())
+        return glm::vec3(0.2f);
+
+    const auto& f = m_Frames[frameIndex];
+    float t = NormalizeCentroid(f.spectral_centroid);
+
+    // zimne barwy (niski centroid) → ciepłe barwy (wysoki centroid)
+    glm::vec3 cold(0.1f, 0.2f, 0.8f);
+    glm::vec3 warm(1.0f, 0.7f, 0.2f);
+
+    return glm::mix(cold, warm, t);
+}
+
 bool AudioMapper::IsBeat(int frameIndex) const
 {
     if (frameIndex < 0 || frameIndex >= m_Frames.size())
@@ -230,6 +304,18 @@ bool AudioMapper::IsBeat(int frameIndex) const
 
     return m_Frames[frameIndex].is_beat;
 }
+
+float AudioMapper::MapBandForPlanet(int frameIndex, int bandIndex) const {
+    if (frameIndex < 0 || frameIndex >= m_Frames.size())
+        return 0.0f;
+
+    const auto& f = m_Frames[frameIndex];
+	Band band = static_cast<Band>(bandIndex);
+
+    return GetSmoothedBandByType(band);
+}
+
+
 
 // -------------------- NORMALIZACJE --------------------
 
@@ -279,6 +365,13 @@ float AudioMapper::NormalizeMFCC(float value) const {
     return clamp(norm, 0.0f, 1.0f);
 }
 
+// MFCC Delta (typowo -40 – 70)
+float AudioMapper::NormalizeMFCCDelta(float value) const {
+    // przesuń i przeskaluj do zakresu 0–1
+    float norm = (value + 40.0f) / (70.0f + 40.0f); // przesunięcie o 40 w górę, zakres 110
+    return clamp(norm, 0.0f, 1.0f);
+}
+
 // Uniwersalna funkcja logarytmicznej normalizacji energii
 float AudioMapper::NormalizeBand(float value, float minVal, float maxVal) const {
     float logMin = std::log10(minVal + 1.0f);
@@ -288,41 +381,52 @@ float AudioMapper::NormalizeBand(float value, float minVal, float maxVal) const 
     return clamp(norm, 0.0f, 1.0f);
 }
 
+float AudioMapper::GetSmoothedBandByType(Band band) const {
+    switch (band) {
+    case Band::SUB_BASS:
+        return m_SmoothedBands.sub_bass;
+	case Band::BASS:
+		return m_SmoothedBands.bass;
+	case Band::LOW_MID:
+		return m_SmoothedBands.low_mid;
+	case Band::MID:
+		return m_SmoothedBands.mid;
+	case Band::HIGH_MID:
+		return m_SmoothedBands.high_mid;
+	case Band::PRESENCE:
+		return m_SmoothedBands.presence;
+	case Band::BRILLIANCE:
+		return m_SmoothedBands.brilliance;
+	case Band::AIR:
+		return m_SmoothedBands.air;
+    default:
+        return 0.0f;
+    }
+}
+
+// wersja ogólna
+//float AudioMapper::GetSmoothedBand(Band band) const {
+//    const float* ptr = reinterpret_cast<const float*>(&m_SmoothedBands);
+//    return ptr[static_cast<int>(band)];
+//}
+
 // -------------------- WYGŁADZANIE --------------------
 
-AudioFrame AudioMapper::GetSmoothedFrame(int frameIndex) {
-    AudioFrame frame = GetFrame(frameIndex);
-    AudioFrame result = frame; // kopia do modyfikacji
-
-    // --- Normalizacja pasm na podstawie m_BandStats ---
-    AudioBands norm;
-    norm.sub_bass = LogNormalize(frame.bands.sub_bass, m_BandStats.sub_bass_min, m_BandStats.sub_bass_max);
-    norm.bass = LogNormalize(frame.bands.bass, m_BandStats.bass_min, m_BandStats.bass_max);
-    norm.low_mid = LogNormalize(frame.bands.low_mid, m_BandStats.low_mid_min, m_BandStats.low_mid_max);
-    norm.mid = LogNormalize(frame.bands.mid, m_BandStats.mid_min, m_BandStats.mid_max);
-    norm.high_mid = LogNormalize(frame.bands.high_mid, m_BandStats.high_mid_min, m_BandStats.high_mid_max);
-    norm.presence = LogNormalize(frame.bands.presence, m_BandStats.presence_min, m_BandStats.presence_max);
-    norm.brilliance = LogNormalize(frame.bands.brilliance, m_BandStats.brilliance_min, m_BandStats.brilliance_max);
-    norm.air = LogNormalize(frame.bands.air, m_BandStats.air_min, m_BandStats.air_max);
-
-    // --- Wygładzanie (exponential moving average) ---
+void AudioMapper::UpdateSmoothedBands(int frameIndex) {
+    const auto& f = m_Frames[frameIndex];
     float alpha = m_SmoothAlpha;
-    m_SmoothedBands.sub_bass = Smooth(m_SmoothedBands.sub_bass, norm.sub_bass, alpha);
-    m_SmoothedBands.bass = Smooth(m_SmoothedBands.bass, norm.bass, alpha);
-    m_SmoothedBands.low_mid = Smooth(m_SmoothedBands.low_mid, norm.low_mid, alpha);
-    m_SmoothedBands.mid = Smooth(m_SmoothedBands.mid, norm.mid, alpha);
-    m_SmoothedBands.high_mid = Smooth(m_SmoothedBands.high_mid, norm.high_mid, alpha);
-    m_SmoothedBands.presence = Smooth(m_SmoothedBands.presence, norm.presence, alpha);
-    m_SmoothedBands.brilliance = Smooth(m_SmoothedBands.brilliance, norm.brilliance, alpha);
-    m_SmoothedBands.air = Smooth(m_SmoothedBands.air, norm.air, alpha);
 
-    // --- Zapis do zwracanego frame’a ---
-    result.bands = m_SmoothedBands;
+    auto smooth = [&](float prev, float cur, float min, float max) {
+        float norm = NormalizeBand(cur, min, max);
+        return Smooth(prev, norm, alpha);
+        };
 
-    // Dodatkowo możesz też tu znormalizować RMS, centroid itp.:
-    result.rms = NormalizeRMS(frame.rms);
-    result.spectral_centroid = NormalizeCentroid(frame.spectral_centroid);
-    result.spectral_bandwidth = NormalizeBandwidth(frame.spectral_bandwidth);
-
-    return result;
+    m_SmoothedBands.sub_bass = smooth(m_SmoothedBands.sub_bass, f.bands.sub_bass, m_BandStats.sub_bass_min, m_BandStats.sub_bass_max);
+    m_SmoothedBands.bass = smooth(m_SmoothedBands.bass, f.bands.bass, m_BandStats.bass_min, m_BandStats.bass_max);
+    m_SmoothedBands.low_mid = smooth(m_SmoothedBands.low_mid, f.bands.low_mid, m_BandStats.low_mid_min, m_BandStats.low_mid_max);
+    m_SmoothedBands.mid = smooth(m_SmoothedBands.mid, f.bands.mid, m_BandStats.mid_min, m_BandStats.mid_max);
+    m_SmoothedBands.high_mid = smooth(m_SmoothedBands.high_mid, f.bands.high_mid, m_BandStats.high_mid_min, m_BandStats.high_mid_max);
+    m_SmoothedBands.presence = smooth(m_SmoothedBands.presence, f.bands.presence, m_BandStats.presence_min, m_BandStats.presence_max);
+    m_SmoothedBands.brilliance = smooth(m_SmoothedBands.brilliance, f.bands.brilliance, m_BandStats.brilliance_min, m_BandStats.brilliance_max);
+    m_SmoothedBands.air = smooth(m_SmoothedBands.air, f.bands.air, m_BandStats.air_min, m_BandStats.air_max);
 }

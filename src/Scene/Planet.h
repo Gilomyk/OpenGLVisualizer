@@ -34,6 +34,11 @@ private:
     float m_SpinAngle;      // Aktualny kπt rotacji w≥asnej
     Planet* m_Parent;       // Wskaünik na planetÍ-rodzica
 
+    // wielkoúci bazowe
+    glm::vec3 m_BaseOrbitTilt;
+    glm::vec3 m_BaseDiffuse;
+
+	// Orbita i úlad
     std::unique_ptr<OrbitTrail> m_Trail;
 	std::unique_ptr<Orbit> m_Orbit;  // Unikalny wskaünik na obiekt orbity (jeúli istnieje)
 
@@ -58,6 +63,9 @@ public:
 	void SetOrbitAngle(float angle) { m_OrbitAngle = angle; }
 	void SetSpinAngle(float angle) { m_SpinAngle = angle; }
 
+	void SetBaseOrbitTilt(const glm::vec3& tilt) { m_BaseOrbitTilt = tilt; }
+	void SetBaseDiffuse(const glm::vec3& diffuse) { m_BaseDiffuse = diffuse; }
+
     void SetTexture(Texture* texture) { m_Texture = texture; }
     void SetMaterial(Material& material) { m_Material = material; }
 
@@ -73,6 +81,14 @@ public:
 	float GetOrbitAngle() const { return m_OrbitAngle; }
 	float GetSpinAngle() const { return m_SpinAngle; }
 
+	glm::vec3 GetBaseOrbitTilt() const { return m_BaseOrbitTilt; }
+	glm::vec3 GetBaseDiffuse() const { return m_BaseDiffuse; }
+
+	Texture* GetTexture() { return m_Texture; }
+	Material& GetMaterial() { return m_Material; }
+    Material& GetBaseMaterial() { return m_Material; }
+
+
     Planet* GetParent() { return m_Parent; }
     std::unique_ptr<OrbitTrail>& GetTrail() { return m_Trail; }
 	std::unique_ptr<Orbit>& GetOrbit() { return m_Orbit; }
@@ -82,6 +98,6 @@ public:
 
 	// Rysowanie
     void DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera);
-    void DrawSun(Shader& shader, Renderer& renderer, const Camera& camera, float rmsSmoothed, float lightIntensityDynamic);
+    void DrawSun(Shader& shader, Renderer& renderer, const Camera& camera);
 	void DebugPrint() const;
 };

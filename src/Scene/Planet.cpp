@@ -23,7 +23,7 @@ Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount,
     m_Rotation(0.0f)
 {
 	m_OrbitRadius = orbitRadius;
-    m_OrbitTilt = orbitTilt;
+    m_OrbitTilt = m_BaseOrbitTilt = orbitTilt;
 	m_OrbitSpeed = orbitSpeed;
 	m_SpinSpeed = spinSpeed;
 	m_OrbitAngle = 0.0f;
@@ -113,7 +113,7 @@ void Planet::DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera
     renderer.Draw(m_Mesh, shader, GL_TRIANGLES);
 }
 
-void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera, float rmsSmoothed, float lightIntensityDynamic) {
+void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, m_Position);
     model = glm::scale(model, m_Scale);
@@ -126,17 +126,8 @@ void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera, f
 
     shader.SetUniform1f("uTime", glfwGetTime());
 
-    glm::vec3 baseColor = glm::mix(
-        glm::vec3(1.0f, 0.7f, 0.4f), // ciep³y pomarañcz przy RMS=1
-        glm::vec3(0.7f, 0.6f, 0.7f), // ró¿owo-fioletowy przy RMS=0
-        1.0f - rmsSmoothed
-    );
-    shader.SetUniform3fv("uBaseColor", baseColor);
-
     shader.SetUniform1f("uFlickerStrength", 0.2f);
     shader.SetUniform1f("uGradientFalloff", 1.5f);
-
-    shader.SetUniform1f("uEmissiveIntensity", lightIntensityDynamic);
 
     if (m_Texture) {
         // tryb z tekstur¹ (np. S³oñce)

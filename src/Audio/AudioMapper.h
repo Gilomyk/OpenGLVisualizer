@@ -7,12 +7,17 @@
 enum class AudioVisualParam {
     SUN_EMISSION,
     PLANET_SCALE,
-    PLANET_ROTATION,
+    ORBIT_SHAKE,
     PLANET_COLOR,
+	SPECULAR_INTENSITY,
+	NOISE_AMOUNT,
+	ATMOSPHERE_ALPHA,
     ORBIT_RADIUS,
-    SCENE_SATURATION
+	ROTATION_SPEED,
+    BEAT
 };
 
+enum class Band { SUB_BASS, BASS, LOW_MID, MID, HIGH_MID, PRESENCE, BRILLIANCE, AIR };
 
 // Struktura pasm audio
 struct AudioBands {
@@ -81,34 +86,46 @@ class AudioMapper {
 public:
     AudioMapper() = default;
 
-    bool LoadFromJSON(const std::string& path);
 
-    // Zwraca czy wyst¹pi³o uderzenie dŸwiêku (beat)
-    bool IsBeat(int frameIndex) const;
-
-    // Liczba za³adowanych ramek
-    size_t GetFrameCount() const { return m_Frames.size(); }
-
-	// Pobiera ramkê audio
-	AudioFrame GetFrame(int frameIndex) {
-		if (frameIndex < 0 || frameIndex >= m_Frames.size())
-			return AudioFrame();
-		return m_Frames[frameIndex];
-	}
-
-    // Zwraca sta³¹ referencjê (do przegl¹dania)
+    // Metody pozyskuj¹ce dane
+    bool LoadFromJSON(const std::string& path, bool onlyStats = false);
     const std::vector<AudioFrame>& GetFrames() const { return m_Frames; }
+    size_t GetFrameCount() const { return m_Frames.size(); }
+    AudioFrame GetFrame(int frameIndex) {
+        if (frameIndex < 0 || frameIndex >= m_Frames.size())
+            return AudioFrame();
+        return m_Frames[frameIndex];
+    }
+    AudioBandsMaxMin GetBandStats() const { return m_BandStats; }
 
+	// G³ówna metoda mapuj¹ca
     float MapValue(AudioVisualParam param, int frameIndex) const;
 
     // --- Mapowania ---
     glm::vec3 MapColor(int frameIndex) const;
-    float MapEmission(int frameIndex) const;
+    bool IsBeat(int frameIndex) const;
+    float MapSunEmission(int frameIndex) const;
     float MapOrbitRadius(int frameIndex) const;
     float MapRotationSpeed(int frameIndex) const;
+    float MapPlanetScale(int frameIndex) const;
+	float MapOrbitShake(int frameIndex) const;
+	float MapPlanetColorShift(int frameIndex) const;
+	float MapSpecularIntensity(int frameIndex) const;
+	float MapNoiseAmount(int frameIndex) const;
+	float MapAtmosphereAlpha(int frameIndex) const;
+    float MapBandForPlanet(int frameIndex, int bandIndex) const;
 
     void SetBandStats(const AudioBandsMaxMin& stats) { m_BandStats = stats; }
-    AudioFrame GetSmoothedFrame(int frameIndex);
+    void UpdateSmoothedBands(int frameIndex);
+    float GetSmoothedBandByType(Band band) const;
+
+    // test GUI
+	void UpdateFrameDirectly(const AudioFrame& frame) {
+		if (m_Frames.empty())
+			m_Frames.push_back(frame);
+		else
+			m_Frames[0] = frame;
+	}
 
 private:
     std::vector<AudioFrame> m_Frames;
@@ -124,10 +141,11 @@ private:
     float NormalizeContrast(float value) const;
     float NormalizeChroma(float value) const;
     float NormalizeMFCC(float value) const;
+    float NormalizeMFCCDelta(float value) const;
 	float NormalizeBand(float value, float minVal, float maxVal) const;
 
 	// --- Wyg³adzanie ---
 
-    AudioBands m_SmoothedBands;
-    float m_SmoothAlpha = 0.2f;
+    float m_SmoothAlpha = 0.25f;
+	AudioBands m_SmoothedBands;
 };

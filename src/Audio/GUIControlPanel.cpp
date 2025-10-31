@@ -2,6 +2,24 @@
 #include "GUIControlPanel.h"
 #include "imgui/imgui.h"
 
+void GUIControlPanel::setBandRanges(AudioBandsMaxMin stats) {
+    bandRanges.sub_bass_min = stats.sub_bass_min;
+    bandRanges.sub_bass_max = stats.sub_bass_max;
+	bandRanges.bass_min = stats.bass_min;
+	bandRanges.bass_max = stats.bass_max;
+	bandRanges.low_mid_min = stats.low_mid_min;
+	bandRanges.low_mid_max = stats.low_mid_max;
+	bandRanges.mid_min = stats.mid_min;
+	bandRanges.mid_max = stats.mid_max;
+	bandRanges.high_mid_min = stats.high_mid_min;
+	bandRanges.high_mid_max = stats.high_mid_max;
+	bandRanges.presence_min = stats.presence_min;
+	bandRanges.presence_max = stats.presence_max;
+	bandRanges.brilliance_min = stats.brilliance_min;
+	bandRanges.brilliance_max = stats.brilliance_max;
+	bandRanges.air_min = stats.air_min;
+	bandRanges.air_max = stats.air_max;
+}
 
 void GUIControlPanel::DrawImGUI()
 {
@@ -29,14 +47,14 @@ void GUIControlPanel::DrawImGUI()
         if (ImGui::BeginTabItem("Bands")) {
             ImGui::Text("Frequency Bands (Hz)");
             ImGui::Separator();
-            ImGui::SliderFloat("Sub Bass", &bands.sub_bass, 0.0f, 10.0f);
-            ImGui::SliderFloat("Bass", &bands.bass, 0.0f, 10.0f);
-            ImGui::SliderFloat("Low Mid", &bands.low_mid, 0.0f, 10.0f);
-            ImGui::SliderFloat("Mid", &bands.mid, 0.0f, 10.0f);
-            ImGui::SliderFloat("High Mid", &bands.high_mid, 0.0f, 10.0f);
-            ImGui::SliderFloat("Presence", &bands.presence, 0.0f, 10.0f);
-            ImGui::SliderFloat("Brilliance", &bands.brilliance, 0.0f, 10.0f);
-            ImGui::SliderFloat("Air", &bands.air, 0.0f, 10.0f);
+            ImGui::SliderFloat("Sub Bass", &bands.sub_bass, bandRanges.sub_bass_min, bandRanges.sub_bass_max);
+            ImGui::SliderFloat("Bass", &bands.bass, bandRanges.bass_min, bandRanges.bass_max);
+            ImGui::SliderFloat("Low Mid", &bands.low_mid, bandRanges.low_mid_min, bandRanges.low_mid_max);
+            ImGui::SliderFloat("Mid", &bands.mid, bandRanges.mid_min, bandRanges.mid_max);
+            ImGui::SliderFloat("High Mid", &bands.high_mid, bandRanges.high_mid_min, bandRanges.high_mid_max);
+            ImGui::SliderFloat("Presence", &bands.presence, bandRanges.presence_min, bandRanges.presence_max);
+            ImGui::SliderFloat("Brilliance", &bands.brilliance, bandRanges.brilliance_min, bandRanges.brilliance_max);
+            ImGui::SliderFloat("Air", &bands.air, bandRanges.air_min, bandRanges.air_max);
             ImGui::EndTabItem();
         }
 

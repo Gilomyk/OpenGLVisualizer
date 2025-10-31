@@ -6,6 +6,8 @@ uniform vec3 uBaseColor;       // bazowy kolor gwiazdy (np. glm::vec3(1.0, 0.9, 
 uniform float uFlickerStrength; // np. 0.2
 uniform float uGradientFalloff; // np. 1.5 (kontrola radialnego spadku)
 
+uniform float uEmissiveIntensity; // si³a emisji œwiat³a
+
 out vec4 FragColor;
 
 // prosty hash noise zale¿ny od UV
@@ -57,6 +59,7 @@ void main()
 
     // === finalny kolor ===
     vec3 finalColor = radialColor * flicker;
+    // vec3 finalColor = radialColor * flicker * uEmissiveIntensity;  // CHANGE
 
     FragColor = vec4(finalColor, 1.0);
 }
