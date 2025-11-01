@@ -22,9 +22,9 @@ uniform vec3 uViewPos;
 uniform vec3 uLightSpecular;
 
 // audio uniforms
+uniform float uSpecularScale;  // skaluje specular
 uniform float uNoiseAmount;    // 0..1
 uniform float uAtmosphereAlpha; // 0..1
-uniform float uSpecularScale;  // skaluje specular
 
 out vec4 FragColor;
 
@@ -57,11 +57,13 @@ void main()
     vec3 reflectDir = reflect(-lightDir, vNormal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), uMaterial.shininess);
 
-    float specStrength = uUseTexture ? 1.0 : texture(uSpecularMap, vUV).r;
-    vec3 specular = specStrength * spec * uMaterial.specular * uLightSpecular * uSpecularScale;
+    float specStrength = uUseTexture ? texture(uSpecularMap, vUV).r : 1.0;
+    vec3 specular = specStrength * spec * uMaterial.specular * (0.2 + 2.5 * uSpecularScale);
+    // vec3 specular = vec3(0.0);
 
     // === Final color ===
-    vec3 result = ambient + diffuse + specular;
-    result = clamp(result, 0.0, 1.0); // ensure no overbright
-    FragColor = vec4(result, 1.0 - uAtmosphereAlpha);
+    vec3 result = (ambient + diffuse + specular);
+    result = mix(result, result * 1.6, uAtmosphereAlpha); // blend to white for atmosphere
+    // result = clamp(result, 0.0, 1.0); // ensure no overbright
+    FragColor = vec4(result, 1.0);
 }

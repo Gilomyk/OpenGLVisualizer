@@ -11,6 +11,7 @@ enum class AudioVisualParam {
     PLANET_COLOR,
 	SPECULAR_INTENSITY,
 	NOISE_AMOUNT,
+	STAR_FLICKER,
 	ATMOSPHERE_ALPHA,
     ORBIT_RADIUS,
 	ROTATION_SPEED,
@@ -111,6 +112,7 @@ public:
 	float MapOrbitShake(int frameIndex) const;
 	float MapPlanetColorShift(int frameIndex) const;
 	float MapSpecularIntensity(int frameIndex) const;
+	float MapStarFlicker(int frameIndex) const;
 	float MapNoiseAmount(int frameIndex) const;
 	float MapAtmosphereAlpha(int frameIndex) const;
     float MapBandForPlanet(int frameIndex, int bandIndex) const;

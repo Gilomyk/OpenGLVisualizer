@@ -1,13 +1,16 @@
-#version 330 core
+Ôªø#version 330 core
 out vec4 FragColor;
 
 in float starSeed;
 
 uniform float uTime;
 
+uniform float uFlickerScale; // 0.0 - 1.0 z AudioMapper
+uniform float uAtmosphereAlpha; // 0.0 - 1.0 z AudioMapper
+
 void main()
 {
-    // ---- miÍkka maska punktu ----
+    // ---- miƒôkka maska punktu ----
     vec2 uv = gl_PointCoord - vec2(0.5);
     if (dot(uv, uv) > 0.25) discard;
 
@@ -18,8 +21,9 @@ void main()
     // sinusoida [0..1]
     float flicker = 0.5 + 0.5 * sin(uTime * freq + phase);
 
-    // ogranicz wahania (øeby nie gas≥y ca≥kiem)
-    flicker = mix(0.3, 1.0, flicker);
 
-    FragColor = vec4(1.0, 1.0, 1.0, flicker); // bia≥y punkt
+    // ogranicz wahania (≈ºeby nie gas≈Çy ca≈Çkiem)
+    float brightness = mix(0.5, 1.5, flicker * (0.5 + 0.5 * uFlickerScale));
+
+    FragColor = vec4(vec3(brightness * uAtmosphereAlpha), flicker); // alfa jako miganie
 }

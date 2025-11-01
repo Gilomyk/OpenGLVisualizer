@@ -16,14 +16,14 @@ struct GUIControlPanel
     bool is_beat = false;
 
     struct Bands {
-        float sub_bass = 1.0f;
-        float bass = 1.0f;
-        float low_mid = 1.0f;
-        float mid = 1.0f;
-        float high_mid = 1.0f;
-        float presence = 1.0f;
-        float brilliance = 1.0f;
-        float air = 1.0f;
+        float sub_bass = 0.0f;
+        float bass = 0.0f;
+        float low_mid = 0.0f;
+        float mid = 0.0f;
+        float high_mid = 0.0f;
+        float presence = 0.0f;
+        float brilliance = 0.0f;
+        float air = 0.0f;
     } bands;
 
     struct BandRanges {

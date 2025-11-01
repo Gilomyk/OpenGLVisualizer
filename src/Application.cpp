@@ -256,12 +256,12 @@ int main() {
     // Ładowanie parametrów audio
     if (!testGUIMode) {
         std::cout << "Audio reactive mode enabled.\n";
-        audio.LoadFromJSON("data/analysis_with_stats.json");
+        audio.LoadFromJSON("data/analysis_ChceBycSam_rms_weighted.json");
         currentFrame = audio.GetFrame(0);
     }
     else {
         std::cout << "Test GUI mode enabled.\n";
-        audio.LoadFromJSON("data/analysis_with_stats.json", true);
+        audio.LoadFromJSON("data/analysis_TEST_rms_weighted", true);
 		audioGUI.setBandRanges(audio.GetBandStats());
     }
 
@@ -330,12 +330,15 @@ int main() {
     //static float lightBaseIntensity = 1.0f;  // intensywność światła
     static float rmsSmoothed = 0.0f;         // do filtrowania RMS
 
-	// Odtwarzanie dźwięku (opcjonalne)
-	if (testGUIMode == false)
-        PlaySound(TEXT("res/audio/slowa.wav"), NULL, SND_FILENAME | SND_ASYNC);
+	// Odtwarzanie dźwięku
+    if (testGUIMode == false) {
+        // WAV
+        PlaySound(TEXT("res/audio/ChceBycSam.wav"), NULL, SND_FILENAME | SND_ASYNC);
 
-    //mciSendString(L"open \"res/audio/Tchaikovsky-Waltz-of-the-Flowers.mp3\" type mpegvideo alias music", NULL, 0, NULL);
-    //mciSendString(L"play music", NULL, 0, NULL);
+		// MP3
+        /*mciSendString(L"open \"res/audio/Tchaikovsky-Waltz-of-the-Flowers.mp3\" type mpegvideo alias music", NULL, 0, NULL);
+        mciSendString(L"play music", NULL, 0, NULL);*/
+    }
 
     // 🔁 Pętla renderująca
     while (!glfwWindowShouldClose(window)) {
@@ -344,12 +347,17 @@ int main() {
 		renderTime = glfwGetTime() - startTime;
 
         float dt = getDeltaTime();
-
         processInput(window);
         camera.Update(dt);
 
-		// Czyszczenie ekranu
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        // === OBLICZENIE KOLORU TŁA ===
+        float atmosphereAlphaV = audio.MapValue(AudioVisualParam::ATMOSPHERE_ALPHA, frameIndex);
+        glm::vec3 darkSpace = glm::vec3(0.00f, 0.00f, 0.00f);
+        glm::vec3 brightSky = glm::vec3(0.10f, 0.13f, 0.21f);
+		glm::vec3 bgColor = glm::mix(darkSpace, brightSky, atmosphereAlphaV); // (ATMOSPHERE_ALPHA)
+
+        // === CZYSZCZENIE BUFORÓW ===
+        glClearColor(bgColor.r, bgColor.g, bgColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderer.Clear();
 
@@ -402,7 +410,6 @@ int main() {
             //ImGui::Text("Global Light:");
             //ImGui::SliderFloat("Sun Base Scale", &sunBaseScale, 0.1f, 5.0f);
             //ImGui::SliderFloat("Light Base Intensity", &lightBaseIntensity, 0.05f, 1.0f);
-            //ImGui::Text("RMS Smoothed: %.3f", rmsSmoothed);
             ////ImGui::Text("Sun Scale Dynamic: %.2f", sunScaleDynamic);
             ////ImGui::Text("Light Intensity: %.2f", lightIntensityDynamic);
             //ImGui::End();
@@ -442,7 +449,8 @@ int main() {
         float planetColorVal = audio.MapValue(AudioVisualParam::PLANET_COLOR, frameIndex);
         float specularVal = audio.MapValue(AudioVisualParam::SPECULAR_INTENSITY, frameIndex);
         float noiseAmountVal = audio.MapValue(AudioVisualParam::NOISE_AMOUNT, frameIndex);
-        float atmosphereAlphaV = audio.MapValue(AudioVisualParam::ATMOSPHERE_ALPHA, frameIndex);
+		float starFlickerVal = audio.MapValue(AudioVisualParam::STAR_FLICKER, frameIndex);
+		// float atmosphereAlphaV = audio.MapValue(AudioVisualParam::ATMOSPHERE_ALPHA, frameIndex); // już pobrane wcześniej
 
 
 		// Aktualizacja słońca
@@ -463,7 +471,10 @@ int main() {
             );
 
             sunShader.SetUniform3fv("uBaseColor", baseColor);
-            sunShader.SetUniform1f("uEmissiveIntensity", sunEmissionVal); // jeśli chcesz
+			sunShader.SetUniform1f("uEmissiveIntensity", sunEmissionVal); // SUN_EMISSION
+            sunShader.SetUniform1f("uNoiseAmount", noiseAmountVal); // NOISE_AMOUNT
+			sunShader.SetUniform1f("uFlickerStrength", starFlickerVal); // STAR_FLICKER
+            planetShader.SetUniform1f("uAtmosphereAlpha", atmosphereAlphaV); // ATMOSPHERE_ALPHA
         }
 
 		// --- Aktualizacja planet ---
@@ -502,35 +513,45 @@ int main() {
             // ustawienia materiału
             mat.diffuse = baseColor * colorShift;
             mat.ambient = mat.diffuse * 0.15f;
-			mat.specular = glm::vec3(specularVal); // regulacja intensywności (SPECULAR_INTENSITY)
 
             planets[i]->SetMaterial(mat);
 
-			// Inne parametry (NOISE_AMOUNT, ATMOSPHERE_ALPHA) - do zaimplementowania w shaderze planety
+			// Inne parametry
 			planetShader.Bind();
-			planetShader.SetUniform1f("uNoiseAmount", noiseAmountVal);
-			planetShader.SetUniform1f("uAtmosphereAlpha", atmosphereAlphaV);
+			planetShader.SetUniform1f("uSpecularScale", specularVal); // SPECULAR_INTENSITY
+			planetShader.SetUniform1f("uNoiseAmount", noiseAmountVal); // NOISE_AMOUNT
+			planetShader.SetUniform1f("uAtmosphereAlpha", atmosphereAlphaV); // ATMOSPHERE_ALPHA
+        }
+
+		// Aktualizacja gwiazd (STAR_FLICKER)
+        {
+            starShader.Bind();
+			starShader.SetUniform1f("uFlickerScale", starFlickerVal); // STAR_FLICKER
+			starShader.SetUniform1f("uAtmosphereAlpha", atmosphereAlphaV); // ATMOSPHERE_ALPHA
         }
 
 
         // --- Rysowanie ---
-        for (auto& planet : planets) {
-            planet->Update(dt);
+        {
+            for (auto& planet : planets) {
+                planet->Update(dt);
 
-        	if (planet.get() == planets[0].get()) { // słońce
-        		planet->DrawSun(sunShader, renderer, camera);
-        		continue;
-        	}
+                if (planet.get() == planets[0].get()) { // słońce
+                    planet->DrawSun(sunShader, renderer, camera);
+                    continue;
+                }
 
-            planet->DrawPlanet(planetShader, renderer, camera);
+                planet->DrawPlanet(planetShader, renderer, camera);
 
-            if (planet->GetOrbit())
-                planet->GetOrbit()->DrawOrbit(orbitShader, renderer, camera, planet->GetParent() ? planet->GetParent()->GetPosition() : glm::vec3(0.0f));
+                if (planet->GetOrbit())
+                    planet->GetOrbit()->DrawOrbit(orbitShader, renderer, camera, planet->GetParent() ? planet->GetParent()->GetPosition() : glm::vec3(0.0f));
 
-            //if (planet->GetTrail())
-            //    planet->GetTrail()->Draw(trailShader, renderer, camera, true); // true = linia
+                //if (planet->GetTrail())
+                //    planet->GetTrail()->Draw(trailShader, renderer, camera, true); // true = linia
+            }
+
+            stars.Draw(starShader, camera);
         }
-        stars.Draw(starShader, camera);
 
 		//float rms = audio.MapValue(AudioVisualParam::SUN_EMISSION, frameIndex);
   //      // Aktualizacja RMS z filtrem wygładzającym
@@ -550,7 +571,7 @@ int main() {
         static float debugTimer = 0.0f;
         debugTimer += dt;
         if (debugTimer > 1.0f) {
-			std::cout << "Frame Index: " << frameIndex << "\n";
+			/*std::cout << "Frame Index: " << frameIndex << "\n";
 			std::cout << "Sun Emission Value: " << sunEmissionVal << "\n";
 			std::cout << "Sun Scale Value: " << sunScaleVal << "\n";
 			std::cout << "Orbit Shake Value: " << orbitShakeVal << "\n";
@@ -559,10 +580,46 @@ int main() {
 			std::cout << "Noise Amount Value: " << noiseAmountVal << "\n";
 			std::cout << "Atmosphere Alpha Value: " << atmosphereAlphaV << "\n";
 
-			glm::vec3 baseColor = planets[1]->GetBaseMaterial().diffuse;
+            std::cout << "-------------------------" << "\n";*/
+
+            /*std::cout << "Band stats loaded:\n";
+            std::cout << "SubBass min=" << audio.GetBandStats().sub_bass_min
+                << " max=" << audio.GetBandStats().sub_bass_max << "\n";
+			std::cout << "Bass min=" << audio.GetBandStats().bass_min
+				<< " max=" << audio.GetBandStats().bass_max << "\n";
+			std::cout << "LowMid min=" << audio.GetBandStats().low_mid_min
+				<< " max=" << audio.GetBandStats().low_mid_max << "\n";
+			std::cout << "Mid min=" << audio.GetBandStats().mid_min
+				<< " max=" << audio.GetBandStats().mid_max << "\n";
+			std::cout << "HighMid min=" << audio.GetBandStats().high_mid_min
+				<< " max=" << audio.GetBandStats().high_mid_max << "\n";
+			std::cout << "Presence min=" << audio.GetBandStats().presence_min
+				<< " max=" << audio.GetBandStats().presence_max << "\n";
+			std::cout << "Brilliance min=" << audio.GetBandStats().brilliance_min
+				<< " max=" << audio.GetBandStats().brilliance_max << "\n";
+			std::cout << "Air min=" << audio.GetBandStats().air_min
+				<< " max=" << audio.GetBandStats().air_max << "\n";
+
+            std::cout << "-------------------------" << "\n";*/
+
+			std::cout << "Smoothed bands:\n";
+			std::cout << " Sub Bass: " << audio.GetSmoothedBandByType(Band::SUB_BASS) << "\n";
+			std::cout << " Bass: " << audio.GetSmoothedBandByType(Band::BASS) << "\n";
+			std::cout << " Low Mid: " << audio.GetSmoothedBandByType(Band::LOW_MID) << "\n";
+			std::cout << " Mid: " << audio.GetSmoothedBandByType(Band::MID) << "\n";
+			std::cout << " High Mid: " << audio.GetSmoothedBandByType(Band::HIGH_MID) << "\n";
+			std::cout << " Presence: " << audio.GetSmoothedBandByType(Band::PRESENCE) << "\n";
+			std::cout << " Brilliance: " << audio.GetSmoothedBandByType(Band::BRILLIANCE) << "\n";
+			std::cout << " Air: " << audio.GetSmoothedBandByType(Band::AIR) << "\n";
+            
+
+
+			/*glm::vec3 baseColor = planets[1]->GetBaseMaterial().diffuse;
 			glm::vec3 currentColor = planets[1]->GetMaterial().diffuse;
 			std::cout << "Base Material Color: " << baseColor.r << ", " << baseColor.g << ", " << baseColor.b << "\n";
 			std::cout << "Current Material Color: " << currentColor.r << ", " << currentColor.g << ", " << currentColor.b << "\n";
+
+            std::cout << "-------------------------" << "\n";*/
             /*for (auto& planet : planets) {
 				  planet->DebugPrint();
             }*/

@@ -3,10 +3,13 @@
 in vec2 vUV;
 uniform float uTime;           // aktualny czas w sekundach
 uniform vec3 uBaseColor;       // bazowy kolor gwiazdy (np. glm::vec3(1.0, 0.9, 0.3))
-uniform float uFlickerStrength; // np. 0.2
 uniform float uGradientFalloff; // np. 1.5 (kontrola radialnego spadku)
 
+// audio params
 uniform float uEmissiveIntensity; // si³a emisji œwiat³a
+uniform float uFlickerStrength; // np. 0.2
+uniform float uNoiseAmount;    // 0.0 - 1.0
+uniform float uAtmosphereAlpha; // 0.0 - 1.0
 
 out vec4 FragColor;
 
@@ -50,6 +53,8 @@ void main()
 
     // === losowy puls / fluktuacja ===
     float n = hashNoise(vUV * 50.0 + vec2(uTime*10.0, uTime*10.0));
+    n = mix(0.5, n, uNoiseAmount); // modulacja szumu
+
     float flicker = 1.0 + (n - 0.5) * 2.0 * uFlickerStrength;
 
     // === dodatkowe kolory / „plamy” ===
@@ -59,6 +64,7 @@ void main()
 
     // === finalny kolor ===
     vec3 finalColor = radialColor * flicker;
+    finalColor = mix(finalColor, finalColor * 1.6, uAtmosphereAlpha); // blend do bia³ego dla atmosfery
     // vec3 finalColor = radialColor * flicker * uEmissiveIntensity;  // CHANGE
 
     FragColor = vec4(finalColor, 1.0);

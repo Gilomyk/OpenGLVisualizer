@@ -86,7 +86,7 @@ void Planet::DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera
     shader.SetUniformMat3f("uNormalMatrix", normalMatrix);
 
     // light uniforms
-    shader.SetUniform3fv("uLightPos", glm::vec3(0.0f, 0.0f, 0.0f));
+	shader.SetUniform3fv("uLightPos", glm::vec3(0.0f, 0.0f, 0.0f)); // œwiat³o w pozycji (0,0,0)
     shader.SetUniform3fv("uLightAmbient", glm::vec3(0.2f, 0.2f, 0.2f));
     shader.SetUniform3fv("uLightDiffuse", glm::vec3(0.7f, 0.7f, 0.7f));
     shader.SetUniform3fv("uLightSpecular", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -102,6 +102,7 @@ void Planet::DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera
     else {
         // tryb materia³owy (planety kolorowe)
         shader.SetUniform1i("uUseTexture", 0);
+		shader.SetUniform3fv("uMaterial.ambient", m_Material.ambient);
         shader.SetUniform3fv("uMaterial.diffuse", m_Material.diffuse);
         shader.SetUniform3fv("uMaterial.specular", m_Material.specular);
         shader.SetUniform1f("uMaterial.shininess", m_Material.shininess);
@@ -126,7 +127,6 @@ void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
 
     shader.SetUniform1f("uTime", glfwGetTime());
 
-    shader.SetUniform1f("uFlickerStrength", 0.2f);
     shader.SetUniform1f("uGradientFalloff", 1.5f);
 
     if (m_Texture) {

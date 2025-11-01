@@ -156,6 +156,8 @@ float AudioMapper::MapValue(AudioVisualParam param, int frameIndex) const {
 		return MapSpecularIntensity(frameIndex);
 	case AudioVisualParam::NOISE_AMOUNT:
 		return MapNoiseAmount(frameIndex);
+	case AudioVisualParam::STAR_FLICKER:
+		return MapStarFlicker(frameIndex);
 	case AudioVisualParam::ATMOSPHERE_ALPHA:
 		return MapAtmosphereAlpha(frameIndex);
 	case AudioVisualParam::ORBIT_RADIUS:
@@ -198,7 +200,7 @@ float AudioMapper::MapPlanetScale(int frameIndex) const {
 }
 
 float AudioMapper::MapOrbitShake(int frameIndex) const {
-    if (frameIndex <= 0 || frameIndex >= m_Frames.size())
+    if (frameIndex < 0 || frameIndex >= m_Frames.size())
         return 0.0f;
 
     const auto& f = m_Frames[frameIndex];
@@ -212,7 +214,7 @@ float AudioMapper::MapOrbitShake(int frameIndex) const {
 }
 
 float AudioMapper::MapPlanetColorShift(int frameIndex) const {
-    if (frameIndex <= 0 || frameIndex >= m_Frames.size())
+    if (frameIndex < 0 || frameIndex >= m_Frames.size())
         return 0.0f;
 
     const auto& f = m_Frames[frameIndex];
@@ -226,7 +228,7 @@ float AudioMapper::MapPlanetColorShift(int frameIndex) const {
 }
 
 float AudioMapper::MapSpecularIntensity(int frameIndex) const {
-    if (frameIndex <= 0 || frameIndex >= m_Frames.size())
+    if (frameIndex < 0 || frameIndex >= m_Frames.size())
         return 0.0f;
 
     const auto& f = m_Frames[frameIndex];
@@ -248,12 +250,23 @@ float AudioMapper::MapNoiseAmount(int frameIndex) const {
     float normPrev = NormalizeBand(fprev.bands.presence, m_BandStats.presence_min, m_BandStats.presence_max);
     float norm = NormalizeBand(f.bands.presence, m_BandStats.presence_min, m_BandStats.presence_max);
 	float presence = Smooth(normPrev, norm, m_SmoothAlpha);
-    return glm::mix(0.0f, 1.0f, presence);
+	return glm::mix(0.0f, 1.0f, presence); // noise amount
+}
+
+float AudioMapper::MapStarFlicker(int frameIndex) const {
+	if (frameIndex < 0 || frameIndex >= m_Frames.size())
+		return 0.0f;
+	const auto& f = m_Frames[frameIndex];
+	const auto& fprev = (frameIndex == 0) ? f : m_Frames[frameIndex - 1];
+
+	float normPrev = NormalizeBand(fprev.bands.brilliance, m_BandStats.brilliance_min, m_BandStats.brilliance_max);
+	float norm = NormalizeBand(f.bands.brilliance, m_BandStats.brilliance_min, m_BandStats.brilliance_max);
+	float brilliance = Smooth(normPrev, norm, m_SmoothAlpha);
+	return glm::mix(0.0f, 1.0f, brilliance); // flicker intensity
 }
 
 float AudioMapper::MapAtmosphereAlpha(int frameIndex) const {
-    if (frameIndex <= 0 || frameIndex >= m_Frames.size())
-        return 0.0f;
+    if (frameIndex < 0 || frameIndex >= m_Frames.size()) return 0.0f;
 
     const auto& f = m_Frames[frameIndex];
     const auto& fprev = (frameIndex == 0) ? f : m_Frames[frameIndex - 1];

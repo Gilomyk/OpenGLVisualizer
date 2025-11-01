@@ -20,6 +20,7 @@ Orbit::Orbit(float radius, int segments, glm::vec3 orbitColor)
 	m_OrbitColor = orbitColor;
 }
 
+// TODO: fix draw orbit tilt
 void Orbit::DrawOrbit(Shader& shader, Renderer& renderer, const Camera& camera, const glm::vec3& parentPos) {
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::translate(model, parentPos);
