@@ -45,6 +45,8 @@ OpenGLVisualizer/x64/
 OpenGLVisualizer/x86/
 OpenGLVisualizer/Debug/
 OpenGLVisualizer/Release/
+OpenGLVisualizer/x64/Debug/
+OpenGLVisualizer/x64/Release/
 x64/
 x86/
 Debug/
@@ -74,5 +76,4 @@ build/
 *.spv
 
 # IMGUI files
-imgui.ini
-
+/imgui.ini

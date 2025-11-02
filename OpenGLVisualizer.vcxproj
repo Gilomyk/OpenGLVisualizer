@@ -139,6 +139,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Audio\AudioMapper.cpp" />
+    <ClCompile Include="src\Audio\Envelope.cpp" />
+    <ClCompile Include="src\Audio\GUIControlPanel.cpp" />
     <ClCompile Include="src\Core\Camera.cpp" />
     <ClCompile Include="src\GL\Mesh.cpp" />
     <ClCompile Include="src\GL\OrbitGen.cpp" />
@@ -167,6 +170,9 @@
     <ClCompile Include="src\VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Audio\AudioMapper.h" />
+    <ClInclude Include="src\Audio\Envelope.h" />
+    <ClInclude Include="src\Audio\GUIControlPanel.h" />
     <ClInclude Include="src\Core\Camera.h" />
     <ClInclude Include="src\GL\Mesh.h" />
     <ClInclude Include="src\GL\OrbitGen.h" />
