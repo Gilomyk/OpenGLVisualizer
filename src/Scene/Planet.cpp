@@ -33,7 +33,8 @@ Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount,
     if (enableOrbit && orbitRadius > 0.0f) {
         m_Trail = std::make_unique<OrbitTrail>();
 
-        m_Orbit = std::make_unique<Orbit>(orbitRadius, 100, glm::vec3(1.0f));
+		// TODO: fix orbit radius for trail and orbit object
+        m_Orbit = std::make_unique<Orbit>(orbitRadius + 50, 100, glm::vec3(1.0f));
 		m_Orbit->SetPosition(glm::vec3(0.0f));
 		m_Orbit->SetRotation(m_OrbitTilt);
     }
