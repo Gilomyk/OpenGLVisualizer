@@ -42,6 +42,7 @@
 #include "MaterialGenerator.h"
 #include "Audio/AudioMapper.h"
 #include "Audio/GUIControlPanel.h"
+#include "Audio/Envelope.h"
 
 #define WIDTH 1920
 #define HEIGHT 1080
@@ -51,7 +52,7 @@
 Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1500.0f);
 bool cameraMode = false;
 
-bool testGUIMode = true;
+bool testGUIMode = false;
 bool enableOrbit = false;
 float startTime = 0.0f;
 float renderTime = 0.0f;
@@ -256,7 +257,7 @@ int main() {
     // Ładowanie parametrów audio
     if (!testGUIMode) {
         std::cout << "Audio reactive mode enabled.\n";
-        audio.LoadFromJSON("data/analysis_GWIAZDY_rms_weighted.json");
+        audio.LoadFromJSON("data/analysis_BabelEDM8-4_rms_weighted.json");
         currentFrame = audio.GetFrame(0);
     }
     else {
@@ -264,6 +265,11 @@ int main() {
         audio.LoadFromJSON("data/analysis_TEST_rms_weighted", true);
 		audioGUI.setBandRanges(audio.GetBandStats());
     }
+
+	// Envelopy dla zdarzeń rytmicznych
+    Envelope beatEnv(0.05f, 0.1f, 0.6f, 0.3f);
+    Envelope onsetEnv(0.02f, 0.05f, 0.5f, 0.2f);
+
 
 	// Planety - materiały
     Texture earthDiffuse("res/textures/earth_diff.png");
@@ -314,26 +320,22 @@ int main() {
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-	// Skalowanie XY
-    static float earthScale = 1.0f;
-	static float sunScale = 1.0f;
 
 	// Indeks klatki audio
     static int frameIndex = 0;
 
 	// Parametry regulowane przez GUI
-	float scaleSensitivity = 1.0f;           // czułość skalowania
 
 
     // Parametry światła słonecznego zależne od audio
-    //static float sunBaseScale = 1.0f;       // podstawowy rozmiar słońca
-    //static float lightBaseIntensity = 1.0f;  // intensywność światła
-    static float rmsSmoothed = 0.0f;         // do filtrowania RMS
+    static float sunBaseScale = 1.0f;       // podstawowy rozmiar słońca
+	float scaleSensitivity = 1.0f;           // czułość skalowania innych planet
+    static float lightBaseIntensity = 1.0f;  // intensywność światła
 
 	// Odtwarzanie dźwięku
     if (testGUIMode == false) {
         // WAV
-        PlaySound(TEXT("res/audio/GWIAZDY.wav"), NULL, SND_FILENAME | SND_ASYNC);
+        PlaySound(TEXT("res/audio/BabelEDM8-4.wav"), NULL, SND_FILENAME | SND_ASYNC);
 
 		// MP3
         /*mciSendString(L"open \"res/audio/Tchaikovsky-Waltz-of-the-Flowers.mp3\" type mpegvideo alias music", NULL, 0, NULL);
@@ -369,7 +371,6 @@ int main() {
         // GUI
         {
             ImGui::Begin("Debug Panel");
-			ImGui::SliderFloat("Sun Scale", &sunScale, 0.1f, 10.0f);
 
 			// Ustawienia kamery
 			ImGui::Text("Camera Settings:");
@@ -400,21 +401,31 @@ int main() {
 			ImGui::Text(" Air: %.3f", currentFrame.bands.air);
 			ImGui::Separator();
 			ImGui::Text(" Is Onset: %s", currentFrame.is_onset ? "Yes" : "No");
+			ImGui::Text(" Onset Level: %.3f", onsetEnv.GetValue());
+			ImGui::Text(" Onset State: %d", (int)onsetEnv.GetState());
 			ImGui::Text(" Is Beat: %s", currentFrame.is_beat ? "Yes" : "No");
+			ImGui::Text(" Beat Level: %.3f", beatEnv.GetValue());
+			ImGui::Text(" Beat State: %d", (int)beatEnv.GetState());
             ImGui::End();
 
             if (testGUIMode) {
                 audioGUI.DrawImGUI();
             }
 
+			// Kontrola parametrów globalnych
+			ImGui::Begin("Global Parameters");
+            ImGui::SliderFloat("Scale Sensitivity", &scaleSensitivity, 0.0f, 20.0f);
+            ImGui::SliderFloat("Sun Base Scale", &sunBaseScale, 0.1f, 5.0f);
+            ImGui::SliderFloat("Light Base Intensity", &lightBaseIntensity, 0.05f, 1.0f);
+            beatEnv.ImGuiControls("Beat Envelope");
+            onsetEnv.ImGuiControls("Onset Envelope");
+			ImGui::End();
+
             //ImGui::Begin("Parameter control");
             //ImGui::SliderFloat("Scale Sensitivity", &scaleSensitivity, 0.0f, 20.0f);
             //ImGui::Separator();
             //ImGui::Text("Global Light:");
-            //ImGui::SliderFloat("Sun Base Scale", &sunBaseScale, 0.1f, 5.0f);
-            //ImGui::SliderFloat("Light Base Intensity", &lightBaseIntensity, 0.05f, 1.0f);
             ////ImGui::Text("Sun Scale Dynamic: %.2f", sunScaleDynamic);
-            ////ImGui::Text("Light Intensity: %.2f", lightIntensityDynamic);
             //ImGui::End();
 
         }
@@ -457,20 +468,31 @@ int main() {
         float noiseAmountVal = audio.MapValue(AudioVisualParam::NOISE_AMOUNT, frameIndex);
 		float starFlickerVal = audio.MapValue(AudioVisualParam::STAR_FLICKER, frameIndex);
 		// float atmosphereAlphaV = audio.MapValue(AudioVisualParam::ATMOSPHERE_ALPHA, frameIndex); // już pobrane wcześniej
-		float flashVal = audio.MapValue(AudioVisualParam::ONSET_FLASH, frameIndex);
+		float onsetVal = audio.MapValue(AudioVisualParam::ONSET_FLASH, frameIndex);
 		float beatVal = audio.MapValue(AudioVisualParam::BEAT_INTENSITY, frameIndex);
 
-
+		// użycie globalnego współczynnik światła
+		sunEmissionVal *= lightBaseIntensity;
+		specularVal *= lightBaseIntensity;
+		starFlickerVal *= lightBaseIntensity;
+        
+		// korzystanie z envelop do wygładzania zdarzeń rytmicznych
+        beatEnv.Trigger(beatVal);
+        onsetEnv.Trigger(onsetVal);
+		beatEnv.Update(dt);
+		onsetEnv.Update(dt);
+		float beatLevel = beatEnv.GetValue();
+		float onsetLevel = onsetEnv.GetValue();
 
 
 		// Aktualizacja słońca
 
         {
             // skala słońca (PLANET_SCALE + BEAT)
-            if (beatVal > 0.5f) {
-                sunScaleVal *= 1.05f;
+            if (beatLevel > 0.0f) {
+                sunScaleVal *= 1.0f + beatLevel * 0.25f; // max +25%
             }
-            glm::vec3 sunScaleVec(sunScaleVal);
+            glm::vec3 sunScaleVec(sunScaleVal * sunBaseScale);
             planets[0]->SetScale(sunScaleVec);
 
 			// ustawienia materiału słońca (SUN_EMISSION)
@@ -518,7 +540,7 @@ int main() {
 			Material matBase = planets[i]->GetBaseMaterial(); // niezmieniony materiał bazowy
 			Material mat = planets[i]->GetMaterial(); // materiał do modyfikacji
 
-            glm::vec3 baseColor = planets[i]->GetBaseDiffuse();
+            glm::vec3 baseDiffuse = planets[i]->GetBaseDiffuse();
 			float baseShininess = planets[i]->GetBaseShininess();
 
             glm::vec3 ambientShift = glm::mix(
@@ -535,13 +557,17 @@ int main() {
 
 
             // ustawienia materiału
-            mat.diffuse = baseColor * diffuseShift;
-            mat.ambient = baseColor * 0.2f * ambientShift;
+            mat.diffuse = baseDiffuse * diffuseShift;
+            mat.ambient = baseDiffuse * 0.2f * ambientShift;
+			mat.shininess = baseShininess;
 
-			if (flashVal) {
-                mat.diffuse *= 1.2f;
-                mat.shininess = glm::mix(baseShininess, baseShininess * 2.0f, 0.5f);
-			}
+            if (onsetLevel > 0.0f) {
+                float intensity = 1.0f + onsetLevel * 0.2f; // do +20% jasności
+                mat.diffuse = baseDiffuse * intensity;
+
+                float shininessBoost = glm::mix(1.0f, 2.0f, onsetLevel); // do 2x większy połysk
+                mat.shininess = baseShininess * shininessBoost;
+            }
 
             planets[i]->SetMaterial(mat);
 
