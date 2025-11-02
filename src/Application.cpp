@@ -495,8 +495,7 @@ int main() {
             glm::vec3 sunScaleVec(sunScaleVal * sunBaseScale);
             planets[0]->SetScale(sunScaleVec);
 
-			// ustawienia materiału słońca (SUN_EMISSION)
-
+            // Inne parametry
             sunShader.Bind();
 
             glm::vec3 baseColor = glm::mix(
@@ -506,10 +505,10 @@ int main() {
             );
 
             sunShader.SetUniform3fv("uBaseColor", baseColor);
-			sunShader.SetUniform1f("uEmissiveIntensity", sunEmissionVal); // SUN_EMISSION
             sunShader.SetUniform1f("uNoiseAmount", noiseAmountVal); // NOISE_AMOUNT
 			sunShader.SetUniform1f("uFlickerStrength", starFlickerVal); // STAR_FLICKER
-            planetShader.SetUniform1f("uAtmosphereAlpha", atmosphereAlphaV); // ATMOSPHERE_ALPHA
+            sunShader.SetUniform1f("uAtmosphereAlpha", atmosphereAlphaV); // ATMOSPHERE_ALPHA
+            sunShader.SetUniform1f("uTextureBlend", textureBlend); // tekstura vs kolor
         }
 
 		// --- Aktualizacja planet ---

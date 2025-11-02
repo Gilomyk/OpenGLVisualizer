@@ -5,8 +5,12 @@ uniform float uTime;           // aktualny czas w sekundach
 uniform vec3 uBaseColor;       // bazowy kolor gwiazdy (np. glm::vec3(1.0, 0.9, 0.3))
 uniform float uGradientFalloff; // np. 1.5 (kontrola radialnego spadku)
 
+// tekstura
+uniform sampler2D uDiffuseMap;
+uniform float uTextureBlend;
+uniform bool uUseTexture;
+
 // audio params
-uniform float uEmissiveIntensity; // si³a emisji œwiat³a
 uniform float uFlickerStrength; // np. 0.2
 uniform float uNoiseAmount;    // 0.0 - 1.0
 uniform float uAtmosphereAlpha; // 0.0 - 1.0
@@ -49,23 +53,23 @@ void main()
     float dist = length(uvCentered);
 
     // === gradient radialny ===
-    vec3 radialColor = mix(uBaseColor, uBaseColor * 0.2, pow(dist, uGradientFalloff));
+    vec3 radialBase = mix(uBaseColor, uBaseColor * 0.2, pow(dist, uGradientFalloff));
+    vec3 texColor = uUseTexture ? texture(uDiffuseMap, vUV).rgb : uBaseColor;
+    vec3 radialColor = mix(radialBase, texColor, uTextureBlend);
 
     // === losowy puls / fluktuacja ===
-    float n = hashNoise(vUV * 50.0 + vec2(uTime*10.0, uTime*10.0));
+    float n = perlin(vUV * 5.0 + vec2(uTime * 0.5, uTime * 0.5));
+    n = 0.5 + 0.5 * n; // z zakresu [-1,1] do [0,1]
     n = mix(0.5, n, uNoiseAmount); // modulacja szumu
 
-    float flicker = 1.0 + (n - 0.5) * 2.0 * uFlickerStrength;
+    float flicker = 1.0 + (n - 0.5) * 0.6 * uFlickerStrength;
 
     // === dodatkowe kolory / „plamy” ===
     // przyk³ad z hash noise
-    float spots = hashNoise(vUV * 200.0 + vec2(sin(uTime*0.7), cos(uTime*0.5)));
-    radialColor *= (0.9 + 0.2 * spots);
 
     // === finalny kolor ===
     vec3 finalColor = radialColor * flicker;
     finalColor = mix(finalColor, finalColor * 1.6, uAtmosphereAlpha); // blend do bia³ego dla atmosfery
-    // vec3 finalColor = radialColor * flicker * uEmissiveIntensity;  // CHANGE
 
     FragColor = vec4(finalColor, 1.0);
 }

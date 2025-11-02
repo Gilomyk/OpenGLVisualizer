@@ -131,6 +131,10 @@ void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
         // tryb z tekstur¹ (np. S³oñce)
         m_Texture->Bind(0);
         shader.SetUniform1i("uDiffuseMap", 0);
+		shader.SetUniform1i("uUseTexture", 1);
+	}
+    else {
+        shader.SetUniform1i("uUseTexture", 0);
     }
 
     renderer.Draw(m_Mesh, shader, GL_TRIANGLES);
