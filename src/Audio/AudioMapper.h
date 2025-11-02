@@ -8,14 +8,16 @@ enum class AudioVisualParam {
     SUN_EMISSION,
     PLANET_SCALE,
     ORBIT_SHAKE,
-    PLANET_COLOR,
+    PLANET_COLOR_LOW_MID,
+    PLANET_COLOR_MID,
 	SPECULAR_INTENSITY,
 	NOISE_AMOUNT,
 	STAR_FLICKER,
 	ATMOSPHERE_ALPHA,
     ORBIT_RADIUS,
 	ROTATION_SPEED,
-    BEAT
+    BEAT_INTENSITY,
+    ONSET_FLASH
 };
 
 enum class Band { SUB_BASS, BASS, LOW_MID, MID, HIGH_MID, PRESENCE, BRILLIANCE, AIR };
@@ -49,6 +51,12 @@ struct AudioBandsMaxMin {
 	float brilliance_max = 1.0f;
 	float air_min = 0.0f;
 	float air_max = 1.0f;
+};
+
+// Struktura przechowuj¹ca parametry koloru planety
+struct PlanetColorParams {
+    float lowMid; // dla ambient
+    float mid;    // dla diffuse
 };
 
 
@@ -105,12 +113,13 @@ public:
     // --- Mapowania ---
     glm::vec3 MapColor(int frameIndex) const;
     bool IsBeat(int frameIndex) const;
+	bool IsOnset(int frameIndex) const;
     float MapSunEmission(int frameIndex) const;
     float MapOrbitRadius(int frameIndex) const;
     float MapRotationSpeed(int frameIndex) const;
     float MapPlanetScale(int frameIndex) const;
 	float MapOrbitShake(int frameIndex) const;
-	float MapPlanetColorShift(int frameIndex) const;
+    PlanetColorParams MapPlanetColors(int frameIndex) const;
 	float MapSpecularIntensity(int frameIndex) const;
 	float MapStarFlicker(int frameIndex) const;
 	float MapNoiseAmount(int frameIndex) const;

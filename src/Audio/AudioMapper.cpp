@@ -150,8 +150,10 @@ float AudioMapper::MapValue(AudioVisualParam param, int frameIndex) const {
 		return MapPlanetScale(frameIndex);
 	case AudioVisualParam::ORBIT_SHAKE:
 		return MapOrbitShake(frameIndex);
-	case AudioVisualParam::PLANET_COLOR:
-		return MapPlanetColorShift(frameIndex);
+    case AudioVisualParam::PLANET_COLOR_LOW_MID:
+        return MapPlanetColors(frameIndex).lowMid;
+	case AudioVisualParam::PLANET_COLOR_MID:
+		return MapPlanetColors(frameIndex).mid;
 	case AudioVisualParam::SPECULAR_INTENSITY:
 		return MapSpecularIntensity(frameIndex);
 	case AudioVisualParam::NOISE_AMOUNT:
@@ -164,6 +166,10 @@ float AudioMapper::MapValue(AudioVisualParam param, int frameIndex) const {
 		return MapOrbitRadius(frameIndex);
 	case AudioVisualParam::ROTATION_SPEED:
 		return MapRotationSpeed(frameIndex);
+    case AudioVisualParam::BEAT_INTENSITY:
+        return IsBeat(frameIndex) ? 1.0f : 0.0f;
+    case AudioVisualParam::ONSET_FLASH:
+        return IsOnset(frameIndex) ? 1.0f : 0.0f;
 	default:
 		break;
 	}
@@ -192,11 +198,12 @@ float AudioMapper::MapPlanetScale(int frameIndex) const {
     const auto& f = m_Frames[frameIndex];
     const auto& fprev = (frameIndex == 0) ? f : m_Frames[frameIndex - 1];
 
+    float normPrev = NormalizeBand(fprev.bands.bass, m_BandStats.bass_min, m_BandStats.bass_max);
     float norm = NormalizeBand(f.bands.bass, m_BandStats.bass_min, m_BandStats.bass_max);
-    float normPrev = NormalizeBand(f.bands.bass, m_BandStats.bass_min, m_BandStats.bass_max);
-
     float bass = Smooth(normPrev, norm, m_SmoothAlpha);
-    return glm::mix(1.0f, 1.8f, norm); // scale multiplier
+
+    // mniejsza rozpiętość, tylko lekki puls
+    return glm::mix(1.0f, 1.2f, bass);
 }
 
 float AudioMapper::MapOrbitShake(int frameIndex) const {
@@ -210,22 +217,30 @@ float AudioMapper::MapOrbitShake(int frameIndex) const {
     float norm = NormalizeBand(f.bands.sub_bass, m_BandStats.sub_bass_min, m_BandStats.sub_bass_max);
     float sub = Smooth(normPrev, norm, m_SmoothAlpha);
 
-    return glm::mix(0.0f, 0.5f, sub); // orbit shake amplitude
+    // słabsze drganie, tylko delikatne falowanie
+    return glm::mix(0.0f, 0.2f, sub);
 }
 
-float AudioMapper::MapPlanetColorShift(int frameIndex) const {
+PlanetColorParams AudioMapper::MapPlanetColors(int frameIndex) const {
+    PlanetColorParams result{};
+
     if (frameIndex < 0 || frameIndex >= m_Frames.size())
-        return 0.0f;
+        return result;
 
     const auto& f = m_Frames[frameIndex];
     const auto& fprev = (frameIndex == 0) ? f : m_Frames[frameIndex - 1];
 
-    float normPrev = NormalizeBand(fprev.bands.mid, m_BandStats.mid_min, m_BandStats.mid_max);
-    float norm = NormalizeBand(f.bands.mid, m_BandStats.mid_min, m_BandStats.mid_max);
-    float mid = Smooth(normPrev, norm, m_SmoothAlpha);
+    float lowPrev = NormalizeBand(fprev.bands.low_mid, m_BandStats.low_mid_min, m_BandStats.low_mid_max);
+    float low = NormalizeBand(f.bands.low_mid, m_BandStats.low_mid_min, m_BandStats.low_mid_max);
+    result.lowMid = Smooth(lowPrev, low, m_SmoothAlpha);
 
-    return mid; // used for color / hue modulation
+    float midPrev = NormalizeBand(fprev.bands.mid, m_BandStats.mid_min, m_BandStats.mid_max);
+    float mid = NormalizeBand(f.bands.mid, m_BandStats.mid_min, m_BandStats.mid_max);
+    result.mid = Smooth(midPrev, mid, m_SmoothAlpha);
+
+    return result;
 }
+
 
 float AudioMapper::MapSpecularIntensity(int frameIndex) const {
     if (frameIndex < 0 || frameIndex >= m_Frames.size())
@@ -316,6 +331,14 @@ bool AudioMapper::IsBeat(int frameIndex) const
         return false;
 
     return m_Frames[frameIndex].is_beat;
+}
+
+bool AudioMapper::IsOnset(int frameIndex) const
+{
+	if (frameIndex < 0 || frameIndex >= m_Frames.size())
+		return false;
+
+	return m_Frames[frameIndex].is_onset;
 }
 
 float AudioMapper::MapBandForPlanet(int frameIndex, int bandIndex) const {

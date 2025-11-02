@@ -37,6 +37,7 @@ private:
     // wielkoœci bazowe
     glm::vec3 m_BaseOrbitTilt;
     glm::vec3 m_BaseDiffuse;
+	float m_baseShininess;
 
 	// Orbita i œlad
     std::unique_ptr<OrbitTrail> m_Trail;
@@ -65,6 +66,7 @@ public:
 
 	void SetBaseOrbitTilt(const glm::vec3& tilt) { m_BaseOrbitTilt = tilt; }
 	void SetBaseDiffuse(const glm::vec3& diffuse) { m_BaseDiffuse = diffuse; }
+	void SetBaseShininess(float shininess) { m_baseShininess = shininess; }
 
     void SetTexture(Texture* texture) { m_Texture = texture; }
     void SetMaterial(Material& material) { m_Material = material; }
@@ -83,6 +85,7 @@ public:
 
 	glm::vec3 GetBaseOrbitTilt() const { return m_BaseOrbitTilt; }
 	glm::vec3 GetBaseDiffuse() const { return m_BaseDiffuse; }
+	float GetBaseShininess() const { return m_baseShininess; }
 
 	Texture* GetTexture() { return m_Texture; }
 	Material& GetMaterial() { return m_Material; }

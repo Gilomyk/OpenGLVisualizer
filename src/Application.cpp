@@ -51,7 +51,7 @@
 Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1500.0f);
 bool cameraMode = false;
 
-bool testGUIMode = false;
+bool testGUIMode = true;
 bool enableOrbit = false;
 float startTime = 0.0f;
 float renderTime = 0.0f;
@@ -202,9 +202,9 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture, const A
         );
         planet->SetMaterial(material);
 		planet->SetBaseDiffuse(material.diffuse);
+		planet->SetBaseShininess(material.shininess);
         planets.push_back(std::move(planet));
     }
-
 	return planets;
 }
 
@@ -256,7 +256,7 @@ int main() {
     // Ładowanie parametrów audio
     if (!testGUIMode) {
         std::cout << "Audio reactive mode enabled.\n";
-        audio.LoadFromJSON("data/analysis_ChceBycSam_rms_weighted.json");
+        audio.LoadFromJSON("data/analysis_GWIAZDY_rms_weighted.json");
         currentFrame = audio.GetFrame(0);
     }
     else {
@@ -333,7 +333,7 @@ int main() {
 	// Odtwarzanie dźwięku
     if (testGUIMode == false) {
         // WAV
-        PlaySound(TEXT("res/audio/ChceBycSam.wav"), NULL, SND_FILENAME | SND_ASYNC);
+        PlaySound(TEXT("res/audio/GWIAZDY.wav"), NULL, SND_FILENAME | SND_ASYNC);
 
 		// MP3
         /*mciSendString(L"open \"res/audio/Tchaikovsky-Waltz-of-the-Flowers.mp3\" type mpegvideo alias music", NULL, 0, NULL);
@@ -398,6 +398,9 @@ int main() {
 			ImGui::Text(" Presence: %.3f", currentFrame.bands.presence);
 			ImGui::Text(" Brilliance: %.3f", currentFrame.bands.brilliance);
 			ImGui::Text(" Air: %.3f", currentFrame.bands.air);
+			ImGui::Separator();
+			ImGui::Text(" Is Onset: %s", currentFrame.is_onset ? "Yes" : "No");
+			ImGui::Text(" Is Beat: %s", currentFrame.is_beat ? "Yes" : "No");
             ImGui::End();
 
             if (testGUIMode) {
@@ -427,7 +430,9 @@ int main() {
 			currentFrame.bands.high_mid = audioGUI.bands.high_mid;
 			currentFrame.bands.presence = audioGUI.bands.presence;
 			currentFrame.bands.brilliance = audioGUI.bands.brilliance;
-			currentFrame.bands.air = audioGUI.bands.air;
+            currentFrame.bands.air = audioGUI.bands.air;
+            currentFrame.is_onset = audioGUI.is_onset;
+			currentFrame.is_beat = audioGUI.is_beat;
             
 			audio.UpdateFrameDirectly(currentFrame);
             audio.UpdateSmoothedBands(frameIndex);
@@ -446,17 +451,25 @@ int main() {
         float sunEmissionVal = audio.MapValue(AudioVisualParam::SUN_EMISSION, frameIndex);
         float sunScaleVal = audio.MapValue(AudioVisualParam::PLANET_SCALE, frameIndex);
         float orbitShakeVal = audio.MapValue(AudioVisualParam::ORBIT_SHAKE, frameIndex);
-        float planetColorVal = audio.MapValue(AudioVisualParam::PLANET_COLOR, frameIndex);
+		float planetColorLowMidVal = audio.MapValue(AudioVisualParam::PLANET_COLOR_LOW_MID, frameIndex);
+        float planetColorMidVal = audio.MapValue(AudioVisualParam::PLANET_COLOR_MID, frameIndex);
         float specularVal = audio.MapValue(AudioVisualParam::SPECULAR_INTENSITY, frameIndex);
         float noiseAmountVal = audio.MapValue(AudioVisualParam::NOISE_AMOUNT, frameIndex);
 		float starFlickerVal = audio.MapValue(AudioVisualParam::STAR_FLICKER, frameIndex);
 		// float atmosphereAlphaV = audio.MapValue(AudioVisualParam::ATMOSPHERE_ALPHA, frameIndex); // już pobrane wcześniej
+		float flashVal = audio.MapValue(AudioVisualParam::ONSET_FLASH, frameIndex);
+		float beatVal = audio.MapValue(AudioVisualParam::BEAT_INTENSITY, frameIndex);
+
+
 
 
 		// Aktualizacja słońca
 
         {
-            // skala słońca (PLANET_SCALE)
+            // skala słońca (PLANET_SCALE + BEAT)
+            if (beatVal > 0.5f) {
+                sunScaleVal *= 1.05f;
+            }
             glm::vec3 sunScaleVec(sunScaleVal);
             planets[0]->SetScale(sunScaleVec);
 
@@ -494,6 +507,9 @@ int main() {
 			// Drgania orbity (ORBIT_SHAKE)
             glm::vec3 baseTilt = planets[i]->GetBaseOrbitTilt(); // dodaj taką metodę/atrybut albo trzymaj wartość
             float shakeAmp = 15.0f;
+            if (beatVal > 0.5f) {
+                shakeAmp *= 1.3f;
+            }
             glm::vec3 newTilt = baseTilt + glm::vec3(orbitShakeVal * shakeAmp, 0.0f, 0.0f);
 
             planets[i]->SetOrbitTilt(newTilt);
@@ -503,16 +519,29 @@ int main() {
 			Material mat = planets[i]->GetMaterial(); // materiał do modyfikacji
 
             glm::vec3 baseColor = planets[i]->GetBaseDiffuse();
+			float baseShininess = planets[i]->GetBaseShininess();
 
-            glm::vec3 colorShift = glm::mix(
-                glm::vec3(0.9f, 0.95f, 1.0f),   // lekko chłodniej
-                glm::vec3(1.1f, 0.95f, 0.8f),   // lekko cieplej
-                planetColorVal
+            glm::vec3 ambientShift = glm::mix(
+                glm::vec3(0.5f, 0.5f, 0.6f),
+                glm::vec3(0.9f, 0.85f, 0.7f),
+                planetColorLowMidVal
             );
 
+            glm::vec3 diffuseShift = glm::mix(
+                glm::vec3(0.8f, 0.9f, 1.0f),
+                glm::vec3(1.1f, 0.95f, 0.8f),
+                planetColorMidVal
+            );
+
+
             // ustawienia materiału
-            mat.diffuse = baseColor * colorShift;
-            mat.ambient = mat.diffuse * 0.15f;
+            mat.diffuse = baseColor * diffuseShift;
+            mat.ambient = baseColor * 0.2f * ambientShift;
+
+			if (flashVal) {
+                mat.diffuse *= 1.2f;
+                mat.shininess = glm::mix(baseShininess, baseShininess * 2.0f, 0.5f);
+			}
 
             planets[i]->SetMaterial(mat);
 
