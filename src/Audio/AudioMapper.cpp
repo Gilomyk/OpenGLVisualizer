@@ -170,6 +170,8 @@ float AudioMapper::MapValue(AudioVisualParam param, int frameIndex) const {
         return IsBeat(frameIndex) ? 1.0f : 0.0f;
     case AudioVisualParam::ONSET_FLASH:
         return IsOnset(frameIndex) ? 1.0f : 0.0f;
+	case AudioVisualParam::CAMERA_SPEED:
+		return MapCameraSpeed(frameIndex);
 	default:
 		break;
 	}
@@ -300,6 +302,13 @@ float AudioMapper::MapOrbitRadius(int frameIndex) const {
     const auto& f = m_Frames[frameIndex];
     float tempo = NormalizeTempo(f.local_tempo);
     return glm::mix(50.0f, 300.0f, tempo); // promień orbity
+}
+
+float AudioMapper::MapCameraSpeed(int frameIndex) const {
+	if (frameIndex < 0 || frameIndex >= m_Frames.size())
+		return 0.0f;
+	const auto& f = m_Frames[frameIndex];
+	return NormalizeTempo(f.local_tempo);
 }
 
 float AudioMapper::MapRotationSpeed(int frameIndex) const {

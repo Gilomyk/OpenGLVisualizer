@@ -17,7 +17,8 @@ enum class AudioVisualParam {
     ORBIT_RADIUS,
 	ROTATION_SPEED,
     BEAT_INTENSITY,
-    ONSET_FLASH
+    ONSET_FLASH,
+	CAMERA_SPEED
 };
 
 enum class Band { SUB_BASS, BASS, LOW_MID, MID, HIGH_MID, PRESENCE, BRILLIANCE, AIR };
@@ -125,6 +126,7 @@ public:
 	float MapNoiseAmount(int frameIndex) const;
 	float MapAtmosphereAlpha(int frameIndex) const;
     float MapBandForPlanet(int frameIndex, int bandIndex) const;
+	float MapCameraSpeed(int frameIndex) const;
 
     void SetBandStats(const AudioBandsMaxMin& stats) { m_BandStats = stats; }
     void UpdateSmoothedBands(int frameIndex);

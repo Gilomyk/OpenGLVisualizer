@@ -51,6 +51,6 @@ public:
 	glm::vec3 GetPosition() const { return Position; }
 
 	void CenterOn(const glm::vec3& targetPos);
-private:
 	void updateCameraVectors();
+	void updateCameraVectorsFront();
 };

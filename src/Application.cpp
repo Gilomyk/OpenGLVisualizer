@@ -43,16 +43,20 @@
 #include "Audio/AudioMapper.h"
 #include "Audio/GUIControlPanel.h"
 #include "Audio/Envelope.h"
+#include "Core/CameraController.h"
 
 #define WIDTH 1920
 #define HEIGHT 1080
 #define AUDIO_FRAMERATE 40
 
-// Ustawienia kamery
+// Ustawienia kamery i kontrolera kamery
 Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1500.0f);
+CameraController camController(&camera);
 bool cameraMode = false;
+bool firstMouse = true;
+float lastX = 400, lastY = 300;
 
-bool testGUIMode = true;
+bool testGUIMode = false;
 bool enableOrbit = false;
 float startTime = 0.0f;
 float renderTime = 0.0f;
@@ -76,9 +80,6 @@ float getDeltaTime() {
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     if (!cameraMode)
         return;
-
-    static float lastX = 400, lastY = 300;
-    static bool firstMouse = true;
 
     if (firstMouse) {
         lastX = xpos;
@@ -131,10 +132,12 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         cameraMode = false;
+        firstMouse = true;
     }
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         cameraMode = true;
+        firstMouse = true;
     }
 }
 
@@ -276,8 +279,12 @@ int main() {
     Texture sunDiffuse("res/textures/sun_diff.png");
     Texture sunSpecular("res/textures/sun_spec.png");
 
+	Texture wool1("res/textures/wool/wool_1.jpg");
+	Texture wool2("res/textures/wool/wool_2.jpg");
+	Texture wool3("res/textures/wool/wool_3.jpg");
+
 	// Generowanie układu słonecznego
-    auto planets = GenerateSystem(&sunDiffuse, &earthDiffuse, currentFrame);
+    auto planets = GenerateSystem(&sunDiffuse, &wool2, currentFrame);
 
     // Generowanie gwiazd
     Stars stars(2000, 750.0f);
@@ -330,6 +337,7 @@ int main() {
 	static float scaleSensitivity = 1.0f;           // czułość skalowania innych planet
     static float lightBaseIntensity = 1.0f;  // intensywność światła
 	static float textureBlend = 1.0f;        // mieszanie tekstur
+	static float cameraSpeedIntensity = 1.0f;         // prędkość kamery
 
 	// Odtwarzanie dźwięku
     if (testGUIMode == false) {
@@ -348,8 +356,19 @@ int main() {
 		renderTime = glfwGetTime() - startTime;
 
         float dt = getDeltaTime();
+
+        // Aktualizacja kamery
+
+		float localTempoVal = audio.MapValue(AudioVisualParam::CAMERA_SPEED, frameIndex);
+		float cameraSpeed = localTempoVal * cameraSpeedIntensity * 500.0;
+
         processInput(window);
-        camera.Update(dt);
+        if (!cameraMode) {
+            camController.Update(dt, planets, cameraSpeed);
+        }
+        else {
+            camera.Update(dt);
+        }
 
         // === OBLICZENIE KOLORU TŁA ===
         float atmosphereAlphaV = audio.MapValue(AudioVisualParam::ATMOSPHERE_ALPHA, frameIndex);
@@ -416,6 +435,7 @@ int main() {
             ImGui::SliderFloat("Scale Sensitivity", &scaleSensitivity, 0.0f, 20.0f);
             ImGui::SliderFloat("Sun Base Scale", &sunBaseScale, 0.1f, 5.0f);
             ImGui::SliderFloat("Light Base Intensity", &lightBaseIntensity, 0.05f, 1.0f);
+			ImGui::SliderFloat("Camera Speed Intensity", &cameraSpeedIntensity, 0.0f, 5.0f);
             ImGui::SliderFloat("Texture Blend", &textureBlend, 0.0f, 1.0f);
             beatEnv.ImGuiControls("Beat Envelope");
             onsetEnv.ImGuiControls("Onset Envelope");
@@ -457,6 +477,7 @@ int main() {
 
             audio.UpdateSmoothedBands(frameIndex);
         }
+
 
         // Pobieranie zmapowanych wartości audio
         float sunEmissionVal = audio.MapValue(AudioVisualParam::SUN_EMISSION, frameIndex);
