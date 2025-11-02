@@ -1,5 +1,6 @@
 #include "Orbit.h"
 #include <GLFW/glfw3.h>
+#include <glm/gtx/euler_angles.hpp>
 
 Orbit::Orbit(float radius, int segments, glm::vec3 orbitColor)
 	: m_Orbit(radius, segments),
@@ -22,10 +23,15 @@ Orbit::Orbit(float radius, int segments, glm::vec3 orbitColor)
 
 // TODO: fix draw orbit tilt
 void Orbit::DrawOrbit(Shader& shader, Renderer& renderer, const Camera& camera, const glm::vec3& parentPos) {
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, parentPos);
-	model = glm::scale(model, m_Scale);
-	model *= glm::toMat4(glm::quat(glm::radians(m_Rotation)));
+	glm::mat4 rot = glm::yawPitchRoll(
+		glm::radians(m_Rotation.y), // yaw
+		glm::radians(m_Rotation.x), // pitch
+		glm::radians(m_Rotation.z)  // roll
+	);
+
+	// model = translate * rotation * scale
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), parentPos) * rot * glm::scale(glm::mat4(1.0f), m_Scale);
+
 
 	shader.Bind();
 	shader.SetUniformMat4f("uModel", model);

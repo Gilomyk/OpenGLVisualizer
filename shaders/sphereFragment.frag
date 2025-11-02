@@ -11,7 +11,7 @@ struct Material {
 };
 uniform Material uMaterial;
 
-uniform bool uUseTexture;
+uniform float uTextureBlend;
 uniform sampler2D uDiffuseMap;
 uniform sampler2D uSpecularMap;
 
@@ -35,8 +35,11 @@ float hashNoise(vec2 p) {
 
 void main()
 {
-    // === Base color (diffuse source) ===
-    vec3 baseColor = uUseTexture ? texture(uDiffuseMap, vUV).rgb : uMaterial.diffuse;
+    vec3 texColor = texture(uDiffuseMap, vUV).rgb;
+    vec3 matColor = uMaterial.diffuse;
+
+    // === Base color blending ===
+    vec3 baseColor = mix(matColor, texColor, uTextureBlend);
 
     // Subtle noise modulation
     float n = hashNoise(vUV * 50.0);
@@ -55,10 +58,17 @@ void main()
     // Specular
     vec3 viewDir = normalize(uViewPos - vPosWorld);
     vec3 reflectDir = reflect(-lightDir, vNormal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), uMaterial.shininess);
 
-    float specStrength = uUseTexture ? texture(uSpecularMap, vUV).r : 1.0;
-    vec3 specular = specStrength * spec * uMaterial.specular * (0.2 + 2.5 * uSpecularScale);
+    // Adjust shininess based on texture blend
+    float shininessAdj = mix(uMaterial.shininess, uMaterial.shininess * 0.6, uTextureBlend);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininessAdj);
+    
+    // Specular map influence
+    float specMapVal = texture(uSpecularMap, vUV).b;
+    float specStrength = mix(1.0, specMapVal, uTextureBlend);
+
+    vec3 specularColor = mix(vec3(1.0), uMaterial.specular, 0.7);
+    vec3 specular = specStrength * spec * specularColor * (0.2 + 2.5 * uSpecularScale);
     // vec3 specular = vec3(0.0);
 
     // === Final color ===

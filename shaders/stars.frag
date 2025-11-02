@@ -25,5 +25,5 @@ void main()
     // ogranicz wahania (żeby nie gasły całkiem)
     float brightness = mix(0.5, 1.5, flicker * (0.5 + 0.5 * uFlickerScale));
 
-    FragColor = vec4(vec3(brightness * uAtmosphereAlpha), flicker); // alfa jako miganie
+    FragColor = vec4(vec3(brightness), flicker); // alfa jako miganie
 }

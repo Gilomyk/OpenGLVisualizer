@@ -35,7 +35,7 @@ Planet::Planet(float radius, unsigned int sectorCount, unsigned int stackCount,
 
 		// TODO: fix orbit radius for trail and orbit object
         m_Orbit = std::make_unique<Orbit>(orbitRadius + 50, 100, glm::vec3(1.0f));
-		m_Orbit->SetPosition(glm::vec3(0.0f));
+        m_Orbit->SetPosition(glm::vec3(0.0f));
 		m_Orbit->SetRotation(m_OrbitTilt);
     }
 }
@@ -64,9 +64,9 @@ void Planet::Update(float dt) {
         m_Trail->AddPoint(m_Position);
     }
 
-    if (m_Orbit) {
+    /*if (m_Orbit) {
         m_Orbit->SetPosition(glm::vec3(0.0f));
-    }
+    }*/
 
 }
 
@@ -94,20 +94,17 @@ void Planet::DrawPlanet(Shader& shader, Renderer& renderer, const Camera& camera
     shader.SetUniform3fv("uViewPos", camera.GetPosition());
 
     // === MATERIAL ===
+	// texture uniforms
     if (m_Texture) {
-        // tryb z tekstur¹ (np. S³oñce)
         m_Texture->Bind(0);
-        shader.SetUniform1i("uUseTexture", 1);
         shader.SetUniform1i("uDiffuseMap", 0);
     }
-    else {
-        // tryb materia³owy (planety kolorowe)
-        shader.SetUniform1i("uUseTexture", 0);
-		shader.SetUniform3fv("uMaterial.ambient", m_Material.ambient);
-        shader.SetUniform3fv("uMaterial.diffuse", m_Material.diffuse);
-        shader.SetUniform3fv("uMaterial.specular", m_Material.specular);
-        shader.SetUniform1f("uMaterial.shininess", m_Material.shininess);
-    }
+
+	// material uniforms
+	shader.SetUniform3fv("uMaterial.ambient", m_Material.ambient);
+    shader.SetUniform3fv("uMaterial.diffuse", m_Material.diffuse);
+    shader.SetUniform3fv("uMaterial.specular", m_Material.specular);
+    shader.SetUniform1f("uMaterial.shininess", m_Material.shininess);
 
     shader.SetUniform1f("uTime", (float)glfwGetTime());
 

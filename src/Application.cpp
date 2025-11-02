@@ -52,7 +52,7 @@
 Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1500.0f);
 bool cameraMode = false;
 
-bool testGUIMode = false;
+bool testGUIMode = true;
 bool enableOrbit = false;
 float startTime = 0.0f;
 float renderTime = 0.0f;
@@ -157,7 +157,7 @@ float randf(float min, float max, int decimals = 2) {
     return std::round(val * factor) / factor;
 }
 
-std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture, const AudioFrame& frame) {
+std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture, Texture* earthTexture, const AudioFrame& frame) {
     std::vector<std::unique_ptr<Planet>> planets;
 
     // Centralna gwiazda
@@ -170,9 +170,6 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture, const A
     sun->SetTexture(sunTexture);
 	planets.push_back(std::move(sun));
     Planet* sunPtr = planets.back().get();
-
-    // Liczba planet 2–5
-    int numPlanets = (int)randf(2, 5);
 
     std::vector<std::pair<std::string, float>> bands = {
         {"sub_bass", frame.bands.sub_bass},
@@ -201,6 +198,7 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture, const A
         auto planet = std::make_unique<Planet>(
             radius, 50, 50, orbitRadius, tilt, orbitSpeed, spinSpeed, sunPtr, enableOrbit
         );
+        planet->SetTexture(earthTexture); // brak tekstury na razie
         planet->SetMaterial(material);
 		planet->SetBaseDiffuse(material.diffuse);
 		planet->SetBaseShininess(material.shininess);
@@ -257,7 +255,7 @@ int main() {
     // Ładowanie parametrów audio
     if (!testGUIMode) {
         std::cout << "Audio reactive mode enabled.\n";
-        audio.LoadFromJSON("data/analysis_BabelEDM8-4_rms_weighted.json");
+        audio.LoadFromJSON("data/analysis_GWIAZDY_rms_weighted.json");
         currentFrame = audio.GetFrame(0);
     }
     else {
@@ -279,7 +277,7 @@ int main() {
     Texture sunSpecular("res/textures/sun_spec.png");
 
 	// Generowanie układu słonecznego
-    auto planets = GenerateSystem(&sunDiffuse, currentFrame);
+    auto planets = GenerateSystem(&sunDiffuse, &earthDiffuse, currentFrame);
 
     // Generowanie gwiazd
     Stars stars(2000, 750.0f);
@@ -329,13 +327,14 @@ int main() {
 
     // Parametry światła słonecznego zależne od audio
     static float sunBaseScale = 1.0f;       // podstawowy rozmiar słońca
-	float scaleSensitivity = 1.0f;           // czułość skalowania innych planet
+	static float scaleSensitivity = 1.0f;           // czułość skalowania innych planet
     static float lightBaseIntensity = 1.0f;  // intensywność światła
+	static float textureBlend = 1.0f;        // mieszanie tekstur
 
 	// Odtwarzanie dźwięku
     if (testGUIMode == false) {
         // WAV
-        PlaySound(TEXT("res/audio/BabelEDM8-4.wav"), NULL, SND_FILENAME | SND_ASYNC);
+        PlaySound(TEXT("res/audio/GWIAZDY.wav"), NULL, SND_FILENAME | SND_ASYNC);
 
 		// MP3
         /*mciSendString(L"open \"res/audio/Tchaikovsky-Waltz-of-the-Flowers.mp3\" type mpegvideo alias music", NULL, 0, NULL);
@@ -356,7 +355,7 @@ int main() {
         float atmosphereAlphaV = audio.MapValue(AudioVisualParam::ATMOSPHERE_ALPHA, frameIndex);
         glm::vec3 darkSpace = glm::vec3(0.00f, 0.00f, 0.00f);
         glm::vec3 brightSky = glm::vec3(0.10f, 0.13f, 0.21f);
-		glm::vec3 bgColor = glm::mix(darkSpace, brightSky, atmosphereAlphaV); // (ATMOSPHERE_ALPHA)
+		glm::vec3 bgColor = glm::mix(darkSpace, brightSky, atmosphereAlphaV * 2.0); // (ATMOSPHERE_ALPHA)
 
         // === CZYSZCZENIE BUFORÓW ===
         glClearColor(bgColor.r, bgColor.g, bgColor.b, 1.0f);
@@ -417,6 +416,7 @@ int main() {
             ImGui::SliderFloat("Scale Sensitivity", &scaleSensitivity, 0.0f, 20.0f);
             ImGui::SliderFloat("Sun Base Scale", &sunBaseScale, 0.1f, 5.0f);
             ImGui::SliderFloat("Light Base Intensity", &lightBaseIntensity, 0.05f, 1.0f);
+            ImGui::SliderFloat("Texture Blend", &textureBlend, 0.0f, 1.0f);
             beatEnv.ImGuiControls("Beat Envelope");
             onsetEnv.ImGuiControls("Onset Envelope");
 			ImGui::End();
@@ -571,11 +571,13 @@ int main() {
 
             planets[i]->SetMaterial(mat);
 
+
 			// Inne parametry
 			planetShader.Bind();
 			planetShader.SetUniform1f("uSpecularScale", specularVal); // SPECULAR_INTENSITY
 			planetShader.SetUniform1f("uNoiseAmount", noiseAmountVal); // NOISE_AMOUNT
 			planetShader.SetUniform1f("uAtmosphereAlpha", atmosphereAlphaV); // ATMOSPHERE_ALPHA
+			planetShader.SetUniform1f("uTextureBlend", textureBlend); // tekstura vs kolor
         }
 
 		// Aktualizacja gwiazd (STAR_FLICKER)
