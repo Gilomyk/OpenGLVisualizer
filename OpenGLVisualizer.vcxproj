@@ -143,6 +143,7 @@
     <ClCompile Include="src\Audio\Envelope.cpp" />
     <ClCompile Include="src\Audio\GUIControlPanel.cpp" />
     <ClCompile Include="src\Core\Camera.cpp" />
+    <ClCompile Include="src\Core\CameraController.cpp" />
     <ClCompile Include="src\GL\Mesh.cpp" />
     <ClCompile Include="src\GL\OrbitGen.cpp" />
     <ClCompile Include="src\GL\SphereGen.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="src\Audio\Envelope.h" />
     <ClInclude Include="src\Audio\GUIControlPanel.h" />
     <ClInclude Include="src\Core\Camera.h" />
+    <ClInclude Include="src\Core\CameraController.h" />
     <ClInclude Include="src\GL\Mesh.h" />
     <ClInclude Include="src\GL\OrbitGen.h" />
     <ClInclude Include="src\GL\SphereGen.h" />
@@ -640,11 +642,6 @@
     <None Include="src\vendor\glm\gtx\vector_angle.inl" />
     <None Include="src\vendor\glm\gtx\vector_query.inl" />
     <None Include="src\vendor\glm\gtx\wrap.inl" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\..\..\Downloads\earth_spec.png" />
-    <Image Include="..\..\..\Downloads\sun.png" />
-    <Image Include="..\..\..\Downloads\sun_spec.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

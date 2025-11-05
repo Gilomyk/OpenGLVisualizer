@@ -102,6 +102,9 @@
     <ClCompile Include="src\Audio\Envelope.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="src\Core\CameraController.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader.h">
@@ -1061,6 +1064,9 @@
     <ClInclude Include="src\Audio\Envelope.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="src\Core\CameraController.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\vendor\glm\detail\func_common.inl">
@@ -1490,16 +1496,5 @@
     <None Include="shaders\trail.vert" />
     <None Include="shaders\stars.frag" />
     <None Include="shaders\stars.vert" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\..\..\Downloads\sun.png">
-      <Filter>Pliki zasobów</Filter>
-    </Image>
-    <Image Include="..\..\..\Downloads\sun_spec.png">
-      <Filter>Pliki zasobów</Filter>
-    </Image>
-    <Image Include="..\..\..\Downloads\earth_spec.png">
-      <Filter>Pliki zasobów</Filter>
-    </Image>
   </ItemGroup>
 </Project>

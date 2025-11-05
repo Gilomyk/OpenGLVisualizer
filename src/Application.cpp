@@ -44,13 +44,14 @@
 #include "Audio/GUIControlPanel.h"
 #include "Audio/Envelope.h"
 #include "Core/CameraController.h"
+#include <glm/gtc/type_ptr.hpp>
 
 #define WIDTH 1920
 #define HEIGHT 1080
 #define AUDIO_FRAMERATE 40
 
 // Ustawienia kamery i kontrolera kamery
-Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 1500.0f);
+Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 2000.0f);
 CameraController camController(&camera);
 bool cameraMode = false;
 bool firstMouse = true;
@@ -170,6 +171,7 @@ std::vector<std::unique_ptr<Planet>> GenerateSystem(Texture* sunTexture, Texture
         nullptr,
         false              // bez orbity
     );
+	sun->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
     sun->SetTexture(sunTexture);
 	planets.push_back(std::move(sun));
     Planet* sunPtr = planets.back().get();
@@ -258,7 +260,7 @@ int main() {
     // Ładowanie parametrów audio
     if (!testGUIMode) {
         std::cout << "Audio reactive mode enabled.\n";
-        audio.LoadFromJSON("data/analysis_GWIAZDY_rms_weighted.json");
+        audio.LoadFromJSON("data/analysis_Tchaikovsky-Waltz-of-the-Flowers_rms_weighted.json");
         currentFrame = audio.GetFrame(0);
     }
     else {
@@ -273,18 +275,23 @@ int main() {
 
 
 	// Planety - materiały
-    Texture earthDiffuse("res/textures/earth_diff.png");
+    Texture earth("res/textures/earth_diff.png");
     Texture earthSpecular("res/textures/earth_spec.png");
 
-    Texture sunDiffuse("res/textures/sun_diff.png");
+    Texture sun("res/textures/sun_diff.png");
     Texture sunSpecular("res/textures/sun_spec.png");
 
 	Texture wool1("res/textures/wool/wool_1.jpg");
 	Texture wool2("res/textures/wool/wool_2.jpg");
 	Texture wool3("res/textures/wool/wool_3.jpg");
 
+	Texture proviWhite("res/textures/provizorka/logo_bialy_napis_czarne_tlo.jpg");
+	Texture proviBlack("res/textures/provizorka/logo_czarny_napis_biale_tlo.jpg");
+	Texture proviWhiteTrans("res/textures/provizorka/logo_bialy_napis_transparentne_tlo.png");
+	Texture proviBlackTrans("res/textures/provizorka/logo_czarny_napis_transparentne_tlo.png");
+
 	// Generowanie układu słonecznego
-    auto planets = GenerateSystem(&sunDiffuse, &wool2, currentFrame);
+    auto planets = GenerateSystem(&sun, &earth, currentFrame);
 
     // Generowanie gwiazd
     Stars stars(2000, 750.0f);
@@ -334,7 +341,9 @@ int main() {
 
     // Parametry światła słonecznego zależne od audio
     static float sunBaseScale = 1.0f;       // podstawowy rozmiar słońca
-	static float scaleSensitivity = 1.0f;           // czułość skalowania innych planet
+	static float sunScaleSensitivity = 1.0f;  // czułość skalowania słońca
+	static float planetBaseScale = 1.0f;    // podstawowy rozmiar innych planet
+	static float planetScaleSensitivity = 1.0f;           // czułość skalowania innych planet
     static float lightBaseIntensity = 1.0f;  // intensywność światła
 	static float textureBlend = 1.0f;        // mieszanie tekstur
 	static float cameraSpeedIntensity = 1.0f;         // prędkość kamery
@@ -342,11 +351,11 @@ int main() {
 	// Odtwarzanie dźwięku
     if (testGUIMode == false) {
         // WAV
-        PlaySound(TEXT("res/audio/GWIAZDY.wav"), NULL, SND_FILENAME | SND_ASYNC);
+        //PlaySound(TEXT("res/audio/GWIAZDY.wav"), NULL, SND_FILENAME | SND_ASYNC);
 
 		// MP3
-        /*mciSendString(L"open \"res/audio/Tchaikovsky-Waltz-of-the-Flowers.mp3\" type mpegvideo alias music", NULL, 0, NULL);
-        mciSendString(L"play music", NULL, 0, NULL);*/
+        mciSendString(L"open \"res/audio/Tchaikovsky-Waltz-of-the-Flowers.mp3\" type mpegvideo alias music", NULL, 0, NULL);
+        mciSendString(L"play music", NULL, 0, NULL);
     }
 
     // 🔁 Pętla renderująca
@@ -364,7 +373,9 @@ int main() {
 
         processInput(window);
         if (!cameraMode) {
-            camController.Update(dt, planets, cameraSpeed);
+            if (!testGUIMode) {
+                camController.Update(dt, planets, cameraSpeed);
+            }
         }
         else {
             camera.Update(dt);
@@ -432,8 +443,10 @@ int main() {
 
 			// Kontrola parametrów globalnych
 			ImGui::Begin("Global Parameters");
-            ImGui::SliderFloat("Scale Sensitivity", &scaleSensitivity, 0.0f, 20.0f);
             ImGui::SliderFloat("Sun Base Scale", &sunBaseScale, 0.1f, 5.0f);
+			ImGui::SliderFloat("Sun Scale Sensitivity", &sunScaleSensitivity, 0.0f, 20.0f);
+			ImGui::SliderFloat("Planet Base Scale", &planetBaseScale, 0.1f, 5.0f);
+            ImGui::SliderFloat("Scale Sensitivity", &planetScaleSensitivity, 0.0f, 20.0f);
             ImGui::SliderFloat("Light Base Intensity", &lightBaseIntensity, 0.05f, 1.0f);
 			ImGui::SliderFloat("Camera Speed Intensity", &cameraSpeedIntensity, 0.0f, 5.0f);
             ImGui::SliderFloat("Texture Blend", &textureBlend, 0.0f, 1.0f);
@@ -511,7 +524,7 @@ int main() {
         {
             // skala słońca (PLANET_SCALE + BEAT)
             if (beatLevel > 0.0f) {
-                sunScaleVal *= 1.0f + beatLevel * 0.25f; // max +25%
+                sunScaleVal *= 1.0f + beatLevel * 0.25f * sunScaleSensitivity; // max +25%
             }
             glm::vec3 sunScaleVec(sunScaleVal * sunBaseScale);
             planets[0]->SetScale(sunScaleVec);
@@ -539,9 +552,9 @@ int main() {
 			// Skala planet na podstawie pasma audio (MapBandForPlanet)
             float bandMapped = audio.MapBandForPlanet(frameIndex, i - 1);
 
-            float scale = 1.0f + bandMapped * scaleSensitivity;
+            float scale = 1.0f * planetBaseScale + bandMapped * planetScaleSensitivity;
             float baseOrbit = 80.0f + i * 50.0f;
-            float orbitRadius = baseOrbit + bandMapped * (scaleSensitivity * 10.0f);
+            float orbitRadius = baseOrbit + bandMapped * (planetScaleSensitivity * 10.0f);
 
             planets[i]->SetScale(glm::vec3(scale));
             planets[i]->SetOrbitRadius(orbitRadius);

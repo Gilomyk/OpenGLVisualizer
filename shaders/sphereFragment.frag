@@ -39,7 +39,8 @@ void main()
     vec3 matColor = uMaterial.diffuse;
 
     // === Base color blending ===
-    vec3 baseColor = mix(matColor, texColor, uTextureBlend);
+    // vec3 baseColor = mix(matColor, texColor, uTextureBlend);
+    vec3 baseColor = mix(matColor, matColor * texColor, uTextureBlend); // multiply
 
     // Subtle noise modulation
     float n = hashNoise(vUV * 50.0);

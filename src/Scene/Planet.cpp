@@ -121,7 +121,7 @@ void Planet::DrawSun(Shader& shader, Renderer& renderer, const Camera& camera) {
     shader.Bind();
     shader.SetUniformMat4f("uModel", model);
     shader.SetUniformMat4f("uView", camera.GetViewMatrix());
-    shader.SetUniformMat4f("uProjection", camera.GetProjectionMatrix());
+    shader.SetUniformMat4f("uProjection", camera.GetProjectionMatrix()); 
 
     shader.SetUniform1f("uTime", glfwGetTime());
 

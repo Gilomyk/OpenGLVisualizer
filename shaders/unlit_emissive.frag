@@ -56,6 +56,7 @@ void main()
     vec3 radialBase = mix(uBaseColor, uBaseColor * 0.2, pow(dist, uGradientFalloff));
     vec3 texColor = uUseTexture ? texture(uDiffuseMap, vUV).rgb : uBaseColor;
     vec3 radialColor = mix(radialBase, texColor, uTextureBlend);
+    // vec3 radialColor = mix(radialBase, radialBase * texColor, uTextureBlend); // multiply
 
     // === losowy puls / fluktuacja ===
     float n = perlin(vUV * 5.0 + vec2(uTime * 0.5, uTime * 0.5));
@@ -66,6 +67,8 @@ void main()
 
     // === dodatkowe kolory / „plamy” ===
     // przyk³ad z hash noise
+    float spots = hashNoise(vUV * 200.0 + vec2(sin(uTime*0.7), cos(uTime*0.5)));
+    radialColor *= (0.9 + 0.2 * spots);
 
     // === finalny kolor ===
     vec3 finalColor = radialColor * flicker;
