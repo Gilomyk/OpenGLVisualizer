@@ -1,9 +1,9 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <vector>
-#include "../VertexArray.h"
-#include "../VertexBuffer.h"
-#include "../Shader.h"
+#include "../Graphics/Buffers/VertexArray.h"
+#include "../Graphics/Buffers/VertexBuffer.h"
+#include "../Graphics/Shader.h"
 #include "../Core/Camera.h"
 
 class Stars {

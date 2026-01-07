@@ -2,9 +2,9 @@
 
 #include "../GL/Mesh.h"
 #include "../GL/SphereGen.h"
-#include "../Shader.h"
-#include "../Renderer.h"
-#include "../Material.h"
+#include "../Graphics/Shader.h"
+#include "../Graphics/Renderer.h"
+#include "../Graphics/Material.h"
 #include "Orbit.h"
 #include "../Core/Camera.h"
 #include "../GL/OrbitTrail.h"

@@ -1,8 +1,8 @@
 #pragma once
 #include "../GL/Mesh.h"
 #include "../GL/OrbitGen.h"
-#include "../Shader.h"
-#include "../Renderer.h"
+#include "../Graphics/Shader.h"
+#include "../Graphics/Renderer.h"
 #include "../Core/Camera.h"
 
 #define GLM_ENABLE_EXPERIMENTAL

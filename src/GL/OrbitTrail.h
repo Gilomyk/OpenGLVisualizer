@@ -2,8 +2,8 @@
 #pragma once
 #include <vector>
 #include <glm/glm.hpp>
-#include "../Shader.h"
-#include "../Renderer.h"
+#include "../Graphics/Shader.h"
+#include "../Graphics/Renderer.h"
 #include "../Core/Camera.h"
 
 class OrbitTrail {

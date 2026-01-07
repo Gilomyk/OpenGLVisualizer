@@ -14,13 +14,13 @@
 //these two headers are already included in the <Windows.h> header
 #pragma comment(lib, "Winmm.lib")
 
-#include "Renderer.h"
-#include "VertexArray.h"
-#include "VertexBuffer.h"
-#include "VertexBufferLayout.h"
-#include "IndexBuffer.h"
-#include "Shader.h"
-#include "Texture.h"
+#include "Graphics/Renderer.h"
+#include "Graphics/Buffers/VertexArray.h"
+#include "Graphics/Buffers/VertexBuffer.h"
+#include "Graphics/Buffers/VertexBufferLayout.h"
+#include "Graphics/Buffers/IndexBuffer.h"
+#include "Graphics/Shader.h"
+#include "Graphics/Texture.h"
 #include "GL/Mesh.h"
 
 #include "GL/SphereGen.h"
@@ -39,7 +39,7 @@
 #include "Scene/Planet.h"
 #include "Scene/Orbit.h"
 #include "Scene/Stars.h"
-#include "MaterialGenerator.h"
+#include "Graphics/MaterialGenerator.h"
 #include "Audio/AudioMapper.h"
 #include "Audio/GUIControlPanel.h"
 #include "Audio/Envelope.h"
@@ -57,7 +57,7 @@ bool cameraMode = false;
 bool firstMouse = true;
 float lastX = 400, lastY = 300;
 
-bool testGUIMode = false;
+bool testGUIMode = true;
 bool enableOrbit = false;
 float startTime = 0.0f;
 float renderTime = 0.0f;
@@ -238,6 +238,11 @@ int main() {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
+	glfwSwapInterval(1); // vsync
+
+	// Włączenie renderowania punktów w shaderze
+	GLCall(glEnable(GL_PROGRAM_POINT_SIZE));
+
     // Włączenie głębi
 	glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -280,15 +285,6 @@ int main() {
 
     Texture sun("res/textures/sun_diff.png");
     Texture sunSpecular("res/textures/sun_spec.png");
-
-	Texture wool1("res/textures/wool/wool_1.jpg");
-	Texture wool2("res/textures/wool/wool_2.jpg");
-	Texture wool3("res/textures/wool/wool_3.jpg");
-
-	Texture proviWhite("res/textures/provizorka/logo_bialy_napis_czarne_tlo.jpg");
-	Texture proviBlack("res/textures/provizorka/logo_czarny_napis_biale_tlo.jpg");
-	Texture proviWhiteTrans("res/textures/provizorka/logo_bialy_napis_transparentne_tlo.png");
-	Texture proviBlackTrans("res/textures/provizorka/logo_czarny_napis_transparentne_tlo.png");
 
 	// Generowanie układu słonecznego
     auto planets = GenerateSystem(&sun, &earth, currentFrame);

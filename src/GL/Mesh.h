@@ -1,18 +1,17 @@
 #pragma once
 
 #include <vector>
-#include "../VertexBuffer.h"
-#include "../VertexArray.h"
-#include "../VertexBufferLayout.h"
-#include "../IndexBuffer.h"
-#include "../Texture.h"
+#include "../Graphics/Buffers/VertexBuffer.h"
+#include "../Graphics/Buffers/VertexArray.h"
+#include "../Graphics/Buffers/VertexBufferLayout.h"
+#include "../Graphics/Buffers/IndexBuffer.h"
+#include "../Graphics/Texture.h"
 
 class Mesh {
 	VertexArray m_VAO;
 	VertexBuffer m_VBO;
 	IndexBuffer m_IBO;
 	VertexBufferLayout m_Layout;
-	Texture* m_Texture;
 
 public:
 
@@ -20,11 +19,10 @@ public:
 
 	Mesh(const float* vertices, unsigned int vertexCount,
 		const unsigned int* indices, unsigned int indexCount,
-		const VertexBufferLayout& layout, Texture* texture = nullptr);
+		const VertexBufferLayout& layout);
 
 	void Bind() const;
 	void Unbind() const;
 
 	unsigned int GetIndexCount() const ;
-	Texture* GetTexture() const ;
 };

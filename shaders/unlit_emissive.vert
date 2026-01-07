@@ -18,5 +18,4 @@ void main()
     vUV = texCoord;
 
     gl_Position = uProjection * uView * vec4(vPosWorld, 1.0);
-//    gl_Position = u_MVP * vec4(aPos, 1.0);
 }

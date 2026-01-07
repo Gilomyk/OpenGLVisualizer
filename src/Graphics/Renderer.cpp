@@ -1,9 +1,9 @@
 #include "Renderer.h"
-#include "VertexArray.h"
-#include "IndexBuffer.h"
+#include "Buffers/VertexArray.h"
+#include "Buffers/IndexBuffer.h"
 #include "Shader.h"
 #include "Renderer.h"
-#include "GL/Mesh.h"
+#include "../GL/Mesh.h"
 
 #include <iostream>
 

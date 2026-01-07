@@ -1,4 +1,4 @@
-﻿#version 330 core
+#version 330 core
 out vec4 FragColor;
 
 in float starSeed;
@@ -22,7 +22,7 @@ void main()
     float flicker = 0.5 + 0.5 * sin(uTime * freq + phase);
 
 
-    // ogranicz wahania (żeby nie gasły całkiem)
+    // ograniczenie migania
     float brightness = mix(0.5, 1.5, flicker * (0.5 + 0.5 * uFlickerScale));
 
     FragColor = vec4(vec3(brightness), flicker); // alfa jako miganie
