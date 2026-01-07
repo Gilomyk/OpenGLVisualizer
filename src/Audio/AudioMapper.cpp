@@ -350,7 +350,7 @@ bool AudioMapper::IsOnset(int frameIndex) const
 	return m_Frames[frameIndex].is_onset;
 }
 
-float AudioMapper::MapBandForPlanet(int frameIndex, int bandIndex) const {
+float AudioMapper::MapBandValue(int frameIndex, int bandIndex) const {
     if (frameIndex < 0 || frameIndex >= m_Frames.size())
         return 0.0f;
 

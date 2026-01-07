@@ -546,7 +546,7 @@ int main() {
         for (size_t i = 1; i < planets.size(); ++i) {
 
 			// Skala planet na podstawie pasma audio (MapBandForPlanet)
-            float bandMapped = audio.MapBandForPlanet(frameIndex, i - 1);
+            float bandMapped = audio.MapBandValue(frameIndex, i - 1);
 
             float scale = 1.0f * planetBaseScale + bandMapped * planetScaleSensitivity;
             float baseOrbit = 80.0f + i * 50.0f;

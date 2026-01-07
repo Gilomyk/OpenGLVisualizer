@@ -125,7 +125,7 @@ public:
 	float MapStarFlicker(int frameIndex) const;
 	float MapNoiseAmount(int frameIndex) const;
 	float MapAtmosphereAlpha(int frameIndex) const;
-    float MapBandForPlanet(int frameIndex, int bandIndex) const;
+    float MapBandValue(int frameIndex, int bandIndex) const;
 	float MapCameraSpeed(int frameIndex) const;
 
     void SetBandStats(const AudioBandsMaxMin& stats) { m_BandStats = stats; }
