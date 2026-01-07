@@ -6,7 +6,7 @@
 
 enum class AudioVisualParam {
     SUN_EMISSION,
-    PLANET_SCALE,
+    SUN_SCALE,
     ORBIT_SHAKE,
     PLANET_COLOR_LOW_MID,
     PLANET_COLOR_MID,
@@ -118,7 +118,7 @@ public:
     float MapSunEmission(int frameIndex) const;
     float MapOrbitRadius(int frameIndex) const;
     float MapRotationSpeed(int frameIndex) const;
-    float MapPlanetScale(int frameIndex) const;
+    float MapSunScale(int frameIndex) const;
 	float MapOrbitShake(int frameIndex) const;
     PlanetColorParams MapPlanetColors(int frameIndex) const;
 	float MapSpecularIntensity(int frameIndex) const;

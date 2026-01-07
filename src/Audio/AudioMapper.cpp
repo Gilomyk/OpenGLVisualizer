@@ -146,8 +146,8 @@ float AudioMapper::MapValue(AudioVisualParam param, int frameIndex) const {
     switch (param) {
     case AudioVisualParam::SUN_EMISSION:
         return MapSunEmission(frameIndex);
-	case AudioVisualParam::PLANET_SCALE:
-		return MapPlanetScale(frameIndex);
+	case AudioVisualParam::SUN_SCALE:
+		return MapSunScale(frameIndex);
 	case AudioVisualParam::ORBIT_SHAKE:
 		return MapOrbitShake(frameIndex);
     case AudioVisualParam::PLANET_COLOR_LOW_MID:
@@ -194,7 +194,7 @@ float AudioMapper::MapSunEmission(int frameIndex) const {
     return glm::mix(0.5f, 6.0f, pow(rms, 1.0f)); // bloom intensity
 }
 
-float AudioMapper::MapPlanetScale(int frameIndex) const {
+float AudioMapper::MapSunScale(int frameIndex) const {
     if (frameIndex < 0 || frameIndex >= m_Frames.size()) return 1.0f;
 
     const auto& f = m_Frames[frameIndex];

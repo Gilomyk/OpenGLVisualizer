@@ -490,7 +490,7 @@ int main() {
 
         // Pobieranie zmapowanych wartości audio
         float sunEmissionVal = audio.MapValue(AudioVisualParam::SUN_EMISSION, frameIndex);
-        float sunScaleVal = audio.MapValue(AudioVisualParam::PLANET_SCALE, frameIndex);
+        float sunScaleVal = audio.MapValue(AudioVisualParam::SUN_SCALE, frameIndex);
         float orbitShakeVal = audio.MapValue(AudioVisualParam::ORBIT_SHAKE, frameIndex);
 		float planetColorLowMidVal = audio.MapValue(AudioVisualParam::PLANET_COLOR_LOW_MID, frameIndex);
         float planetColorMidVal = audio.MapValue(AudioVisualParam::PLANET_COLOR_MID, frameIndex);
