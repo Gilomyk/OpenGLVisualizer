@@ -77,7 +77,7 @@ void Camera::ProcessMouseScroll(float yoffset) {
 		Zoom = 1.0f;
 	if (Zoom > 45.0f)
 		Zoom = 45.0f;
-	Projection = glm::perspective(glm::radians(Zoom), Projection[1][1] / Projection[0][0], 0.1f, 1000.0f);
+	Projection = glm::perspective(glm::radians(Zoom), Projection[1][1] / Projection[0][0], 0.1f, 2000.0f);
 }
 
 void Camera::CenterOn(const glm::vec3& targetPos) {

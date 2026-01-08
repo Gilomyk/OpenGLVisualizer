@@ -1,4 +1,4 @@
-﻿#version 330 core
+#version 330 core
 layout(location = 0) in vec3 aPos;
 
 uniform mat4 uView;
@@ -7,7 +7,7 @@ uniform float uFlickerScale; // 0..1 z AudioMapper
 uniform float uTime;
 
 
-out float starSeed;
+flat out float starSeed;
 
 void main()
 {

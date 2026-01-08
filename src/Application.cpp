@@ -50,6 +50,12 @@
 #define HEIGHT 1080
 #define AUDIO_FRAMERATE 40
 
+std::string load_path = "data/analysis_Tchaikovsky-short_rms_weighted.json";
+std::wstring audio_path = L"res/audio/Tchaikovsky-short.wav";
+bool wav = true;
+
+std::wstring mp3_command = L"open \"" + audio_path + L"\" type mpegvideo alias music";
+
 // Ustawienia kamery i kontrolera kamery
 Camera camera(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 2000.0f);
 CameraController camController(&camera);
@@ -238,13 +244,17 @@ int main() {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
+	glfwSwapInterval(1); // vsync
+
+    GLCall(glEnable(GL_PROGRAM_POINT_SIZE));
+
     // Włączenie głębi
 	glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
 	// Wyłączenie tylnych ścian
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+    glCullFace(GL_BACK);
 	glFrontFace(GL_CCW); // Ustawienie kierunku zgodnego z ruchem wskazówek zegara jako przód
 
     GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // Ustawienie funkcji mieszania dla przezroczystości
@@ -260,17 +270,18 @@ int main() {
     // Ładowanie parametrów audio
     if (!testGUIMode) {
         std::cout << "Audio reactive mode enabled.\n";
-        audio.LoadFromJSON("data/analysis_Tchaikovsky-Waltz-of-the-Flowers_rms_weighted.json");
+        //audio.LoadFromJSON("data/analysis_Tchaikovsky-short_rms_weighted.json");
+        audio.LoadFromJSON(load_path);
         currentFrame = audio.GetFrame(0);
     }
     else {
         std::cout << "Test GUI mode enabled.\n";
-        audio.LoadFromJSON("data/analysis_TEST_rms_weighted", true);
-		audioGUI.setBandRanges(audio.GetBandStats());
+        //audio.LoadFromJSON("data/analysis_Tchaikovsky-short_rms_weighted.json", true);
+		//audioGUI.setBandRanges(audio.GetBandStats());
     }
 
 	// Envelopy dla zdarzeń rytmicznych
-    Envelope beatEnv(0.05f, 0.1f, 0.6f, 0.3f);
+    Envelope beatEnv(0.15f, 0.3f, 1.0f, 0.6f);
     Envelope onsetEnv(0.02f, 0.05f, 0.5f, 0.2f);
 
 
@@ -281,15 +292,6 @@ int main() {
     Texture sun("res/textures/sun_diff.png");
     Texture sunSpecular("res/textures/sun_spec.png");
 
-	Texture wool1("res/textures/wool/wool_1.jpg");
-	Texture wool2("res/textures/wool/wool_2.jpg");
-	Texture wool3("res/textures/wool/wool_3.jpg");
-
-	Texture proviWhite("res/textures/provizorka/logo_bialy_napis_czarne_tlo.jpg");
-	Texture proviBlack("res/textures/provizorka/logo_czarny_napis_biale_tlo.jpg");
-	Texture proviWhiteTrans("res/textures/provizorka/logo_bialy_napis_transparentne_tlo.png");
-	Texture proviBlackTrans("res/textures/provizorka/logo_czarny_napis_transparentne_tlo.png");
-
 	// Generowanie układu słonecznego
     auto planets = GenerateSystem(&sun, &earth, currentFrame);
 
@@ -297,11 +299,10 @@ int main() {
     Stars stars(2000, 750.0f);
 
 	// Shader i renderer
+    Shader starShader("shaders/stars.vert", "shaders/stars.frag");
     Shader sunShader("shaders/unlit_emissive.vert", "shaders/unlit_emissive.frag");
     Shader planetShader("shaders/sphereVertex.vert", "shaders/sphereFragment.frag");
 	Shader orbitShader("shaders/orbit.vert", "shaders/orbit.frag");
-    Shader trailShader("shaders/trail.vert", "shaders/trail.frag");
-    Shader starShader("shaders/stars.vert", "shaders/stars.frag");
 	Renderer renderer;
 
     // Inicjalizacja shaderów
@@ -340,22 +341,25 @@ int main() {
 
 
     // Parametry światła słonecznego zależne od audio
-    static float sunBaseScale = 1.0f;       // podstawowy rozmiar słońca
-	static float sunScaleSensitivity = 1.0f;  // czułość skalowania słońca
-	static float planetBaseScale = 1.0f;    // podstawowy rozmiar innych planet
-	static float planetScaleSensitivity = 1.0f;           // czułość skalowania innych planet
+    static float sunBaseScale = 0.85f;       // podstawowy rozmiar słońca
+	static float sunScaleSensitivity = 1.4f;  // czułość skalowania słońca
+	static float planetBaseScale = 3.0f;    // podstawowy rozmiar innych planet
+	static float planetScaleSensitivity = 11.0f;           // czułość skalowania innych planet
     static float lightBaseIntensity = 1.0f;  // intensywność światła
-	static float textureBlend = 1.0f;        // mieszanie tekstur
+	static float textureBlend = 0.8f;        // mieszanie tekstur
 	static float cameraSpeedIntensity = 1.0f;         // prędkość kamery
 
 	// Odtwarzanie dźwięku
     if (testGUIMode == false) {
-        // WAV
-        //PlaySound(TEXT("res/audio/GWIAZDY.wav"), NULL, SND_FILENAME | SND_ASYNC);
-
-		// MP3
-        mciSendString(L"open \"res/audio/Tchaikovsky-Waltz-of-the-Flowers.mp3\" type mpegvideo alias music", NULL, 0, NULL);
-        mciSendString(L"play music", NULL, 0, NULL);
+        if (wav) {
+            // WAV
+            PlaySound(audio_path.c_str(), NULL, SND_FILENAME | SND_ASYNC);
+        }
+		else {
+			// MP3
+			mciSendString(mp3_command.c_str(), NULL, 0, NULL);
+			mciSendString(L"play music", NULL, 0, NULL);
+		}
     }
 
     // 🔁 Pętla renderująca
@@ -518,6 +522,12 @@ int main() {
 		float beatLevel = beatEnv.GetValue();
 		float onsetLevel = onsetEnv.GetValue();
 
+        // Aktualizacja gwiazd (STAR_FLICKER)
+        {
+            starShader.Bind();
+            starShader.SetUniform1f("uFlickerScale", starFlickerVal); // STAR_FLICKER
+            starShader.SetUniform1f("uAtmosphereAlpha", atmosphereAlphaV); // ATMOSPHERE_ALPHA
+        }
 
 		// Aktualizacja słońca
 
@@ -544,6 +554,9 @@ int main() {
             sunShader.SetUniform1f("uAtmosphereAlpha", atmosphereAlphaV); // ATMOSPHERE_ALPHA
             sunShader.SetUniform1f("uTextureBlend", textureBlend); // tekstura vs kolor
         }
+
+
+        
 
 		// --- Aktualizacja planet ---
 
@@ -613,16 +626,11 @@ int main() {
 			planetShader.SetUniform1f("uTextureBlend", textureBlend); // tekstura vs kolor
         }
 
-		// Aktualizacja gwiazd (STAR_FLICKER)
-        {
-            starShader.Bind();
-			starShader.SetUniform1f("uFlickerScale", starFlickerVal); // STAR_FLICKER
-			starShader.SetUniform1f("uAtmosphereAlpha", atmosphereAlphaV); // ATMOSPHERE_ALPHA
-        }
 
 
         // --- Rysowanie ---
         {
+            stars.Draw(starShader, camera);
             for (auto& planet : planets) {
                 planet->Update(dt);
 
@@ -640,7 +648,6 @@ int main() {
                 //    planet->GetTrail()->Draw(trailShader, renderer, camera, true); // true = linia
             }
 
-            stars.Draw(starShader, camera);
         }
 
 		//float rms = audio.MapValue(AudioVisualParam::SUN_EMISSION, frameIndex);

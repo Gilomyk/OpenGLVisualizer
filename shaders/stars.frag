@@ -1,7 +1,7 @@
-﻿#version 330 core
+#version 330 core
 out vec4 FragColor;
 
-in float starSeed;
+flat in float starSeed;
 
 uniform float uTime;
 
